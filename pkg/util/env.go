@@ -9,7 +9,6 @@ func GetEnvVarOrPanic(envVarName string) string {
 		panic("unable to find env var: " + envVarName)
 	}
 	return v
-
 }
 
 // Utility function to grab an environment variable, or return the default if it does not exist

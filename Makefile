@@ -1,5 +1,11 @@
-build-auth: db
+.PHONY: build
+build: gen
 	@go build -o ./bin/auth ./cmd/auth/*.go
 
-run-auth: build-auth
+.PHONY: run
+run: build
 	@./bin/auth
+
+.PHONY: gen
+generate: db
+	@go generate ./ent

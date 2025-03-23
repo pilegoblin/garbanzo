@@ -3,6 +3,3 @@ build-auth: db
 
 run-auth: build-auth
 	@./bin/auth
-
-db:
-	@sqlc generate

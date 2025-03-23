@@ -1,4 +1,4 @@
-// This appllcation will be the RESTful endpoint responsible for providing and verifying auth to users
+// This application will be the RESTful endpoint responsible for providing and verifying auth to users
 
 package main
 
@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/banana-slugg/garbanzo/pkg/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -15,6 +14,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth/gothic"
+	"github.com/pilegoblin/garbanzo/internal/util"
 )
 
 func init() {

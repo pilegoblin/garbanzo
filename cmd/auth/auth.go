@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/banana-slugg/garbanzo/pkg/util"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
+	"github.com/pilegoblin/garbanzo/internal/util"
 )
 
 // Sets up the goth package to do what it needs to do

@@ -20,7 +20,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Location", "/auth?provider=google")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	}
-	render.JSON(w, r, map[string]interface{}{
+	render.JSON(w, r, map[string]any{
 		"email": email,
 	})
 }

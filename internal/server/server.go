@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/pilegoblin/garbanzo/internal/server/handlers"
+	"github.com/pilegoblin/garbanzo/internal/server/middleware"
 	"github.com/pilegoblin/garbanzo/internal/util"
 )
 
@@ -22,6 +23,7 @@ func New() *Server {
 }
 
 func (s *Server) Run() {
+
 	s.Router.Group(func(r chi.Router) {
 		// middleware
 		r.Use(cors.Handler(cors.Options{
@@ -33,13 +35,13 @@ func (s *Server) Run() {
 			MaxAge:           300,
 		}))
 		r.Use(middleware.Logger)
-		r.Use(middleware.Recoverer)
+		r.Use(chimiddleware.Recoverer)
 
 		// routes
 		r.Get("/", handlers.MainHandler)
+		r.Get("/auth", handlers.AuthHandler)
 		r.Get("/auth/callback", handlers.CallbackHandler)
 		r.Get("/logout", handlers.LogoutHandler)
-		r.Get("/auth", handlers.AuthHandler)
 	})
 
 	port := util.GetEnvVarOrDefault("PORT", "8080")

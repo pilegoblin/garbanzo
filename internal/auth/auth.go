@@ -9,24 +9,26 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
-	"github.com/pilegoblin/garbanzo/internal/util"
+	"github.com/pilegoblin/garbanzo/internal/config"
 )
 
 var store *sessions.CookieStore
 var authOnce sync.Once
 
-func SetupAuth() {
-	authOnce.Do(setup)
+func SetupAuth(config *config.Config) {
+	authOnce.Do(func() {
+		setup(config)
+	})
 }
 
 // Sets up the goth package to do what it needs to do
-func setup() {
-	sessionSecret := util.GetEnvVarOrPanic("SESSION_SECRET")
-	googleKey := util.GetEnvVarOrPanic("GOOGLE_KEY")
-	googleSecret := util.GetEnvVarOrPanic("GOOGLE_SECRET")
+func setup(config *config.Config) {
+	sessionSecret := config.Auth.SessionSecret
+	googleKey := config.Auth.GoogleClientID
+	googleSecret := config.Auth.GoogleClientSecret
 
-	port := util.GetEnvVarOrDefault("PORT", "8080")
-	environment := util.GetEnvVarOrDefault("ENVIRONMENT", "dev")
+	port := config.Server.Port
+	environment := config.Environment
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
 

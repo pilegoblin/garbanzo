@@ -11,6 +11,7 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/gorilla/sessions v1.1.1
 	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.10.9
 	github.com/markbates/goth v1.79.0
 )
 

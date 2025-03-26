@@ -1,24 +1,27 @@
 package server
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/pilegoblin/garbanzo/internal/config"
 	"github.com/pilegoblin/garbanzo/internal/server/handlers"
 	"github.com/pilegoblin/garbanzo/internal/server/middleware"
-	"github.com/pilegoblin/garbanzo/internal/util"
 )
 
 type Server struct {
 	Router *chi.Mux
+	port   string
 	// Db, config can be added here
 }
 
-func New() *Server {
+func New(config *config.ServerConfig) *Server {
 	return &Server{
 		Router: chi.NewRouter(),
+		port:   config.Port,
 	}
 }
 
@@ -44,6 +47,6 @@ func (s *Server) Run() {
 		r.Get("/logout", handlers.LogoutHandler)
 	})
 
-	port := util.GetEnvVarOrDefault("PORT", "8080")
-	http.ListenAndServe(":"+port, s.Router)
+	slog.Info("Starting server on port " + s.port)
+	http.ListenAndServe(":"+s.port, s.Router)
 }

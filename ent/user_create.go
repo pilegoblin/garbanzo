@@ -40,6 +40,14 @@ func (uc *UserCreate) SetPicture(s string) *UserCreate {
 	return uc
 }
 
+// SetNillablePicture sets the "picture" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePicture(s *string) *UserCreate {
+	if s != nil {
+		uc.SetPicture(*s)
+	}
+	return uc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (uc *UserCreate) SetCreatedAt(t time.Time) *UserCreate {
 	uc.mutation.SetCreatedAt(t)
@@ -156,14 +164,6 @@ func (uc *UserCreate) check() error {
 	if v, ok := uc.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
-		}
-	}
-	if _, ok := uc.mutation.Picture(); !ok {
-		return &ValidationError{Name: "picture", err: errors.New(`ent: missing required field "User.picture"`)}
-	}
-	if v, ok := uc.mutation.Picture(); ok {
-		if err := user.PictureValidator(v); err != nil {
-			return &ValidationError{Name: "picture", err: fmt.Errorf(`ent: validator failed for field "User.picture": %w`, err)}
 		}
 	}
 	if _, ok := uc.mutation.CreatedAt(); !ok {

@@ -1,6 +1,7 @@
 package session
 
 import (
+	"errors"
 	"net/http"
 	"sync"
 
@@ -20,4 +21,16 @@ func GetSession(r *http.Request) (*sessions.Session, error) {
 		return nil, err
 	}
 	return session, nil
+}
+
+func GetEmail(r *http.Request) (string, error) {
+	session, err := GetSession(r)
+	if err != nil {
+		return "", err
+	}
+	email, ok := session.Values["email"].(string)
+	if !ok {
+		return "", errors.New("email not found in session")
+	}
+	return email, nil
 }

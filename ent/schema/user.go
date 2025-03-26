@@ -31,7 +31,7 @@ func (User) Fields() []ent.Field {
 			Unique().
 			NotEmpty(),
 		field.String("picture").
-			NotEmpty(),
+			Optional(),
 		field.Time("created_at").
 			Default(time.Now),
 	}

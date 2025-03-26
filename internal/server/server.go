@@ -8,20 +8,24 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/pilegoblin/garbanzo/internal/config"
+	"github.com/pilegoblin/garbanzo/internal/database"
 	"github.com/pilegoblin/garbanzo/internal/server/handlers"
 	"github.com/pilegoblin/garbanzo/internal/server/middleware"
 )
 
 type Server struct {
-	Router *chi.Mux
-	port   string
+	Router  *chi.Mux
+	port    string
+	handler *handlers.HandlerEnv
 	// Db, config can be added here
 }
 
-func New(config *config.ServerConfig) *Server {
+func New(config *config.Config) *Server {
+	db := database.New(&config.Database)
 	return &Server{
-		Router: chi.NewRouter(),
-		port:   config.Port,
+		Router:  chi.NewRouter(),
+		port:    config.Server.Port,
+		handler: handlers.NewHandlerEnv(db),
 	}
 }
 
@@ -40,11 +44,25 @@ func (s *Server) Run() {
 		r.Use(middleware.Logger)
 		r.Use(chimiddleware.Recoverer)
 
-		// routes
-		r.Get("/", handlers.MainHandler)
+		// index route
+		r.Get("/", handlers.IndexViewHandler)
+
+		// auth routes
+		r.Get("/login", handlers.LoginHandler)
 		r.Get("/auth", handlers.AuthHandler)
 		r.Get("/auth/callback", handlers.CallbackHandler)
 		r.Get("/logout", handlers.LogoutHandler)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.EmailMiddleware)
+			// user routes
+			r.Get("/user", s.handler.UserHandler)
+			r.Get("/user/create", handlers.CreateUserViewHandler)
+			r.Post("/user/create", s.handler.CreateUserHandler)
+
+			// views
+		})
+
 	})
 
 	slog.Info("Starting server on port " + s.port)

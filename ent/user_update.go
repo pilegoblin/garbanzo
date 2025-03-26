@@ -72,6 +72,12 @@ func (uu *UserUpdate) SetNillablePicture(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearPicture clears the value of the "picture" field.
+func (uu *UserUpdate) ClearPicture() *UserUpdate {
+	uu.mutation.ClearPicture()
+	return uu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (uu *UserUpdate) SetCreatedAt(t time.Time) *UserUpdate {
 	uu.mutation.SetCreatedAt(t)
@@ -238,11 +244,6 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
 		}
 	}
-	if v, ok := uu.mutation.Picture(); ok {
-		if err := user.PictureValidator(v); err != nil {
-			return &ValidationError{Name: "picture", err: fmt.Errorf(`ent: validator failed for field "User.picture": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -266,6 +267,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.Picture(); ok {
 		_spec.SetField(user.FieldPicture, field.TypeString, value)
+	}
+	if uu.mutation.PictureCleared() {
+		_spec.ClearField(user.FieldPicture, field.TypeString)
 	}
 	if value, ok := uu.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
@@ -467,6 +471,12 @@ func (uuo *UserUpdateOne) SetNillablePicture(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// ClearPicture clears the value of the "picture" field.
+func (uuo *UserUpdateOne) ClearPicture() *UserUpdateOne {
+	uuo.mutation.ClearPicture()
+	return uuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (uuo *UserUpdateOne) SetCreatedAt(t time.Time) *UserUpdateOne {
 	uuo.mutation.SetCreatedAt(t)
@@ -646,11 +656,6 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
 		}
 	}
-	if v, ok := uuo.mutation.Picture(); ok {
-		if err := user.PictureValidator(v); err != nil {
-			return &ValidationError{Name: "picture", err: fmt.Errorf(`ent: validator failed for field "User.picture": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -691,6 +696,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Picture(); ok {
 		_spec.SetField(user.FieldPicture, field.TypeString, value)
+	}
+	if uuo.mutation.PictureCleared() {
+		_spec.ClearField(user.FieldPicture, field.TypeString)
 	}
 	if value, ok := uuo.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)

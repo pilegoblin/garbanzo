@@ -81,8 +81,6 @@ var (
 	EmailValidator func(string) error
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	UsernameValidator func(string) error
-	// PictureValidator is a validator for the "picture" field. It is called by the builders before save.
-	PictureValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 )

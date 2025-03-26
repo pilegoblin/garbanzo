@@ -73,7 +73,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "username", Type: field.TypeString, Unique: true},
-		{Name: "picture", Type: field.TypeString},
+		{Name: "picture", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 	}
 	// UsersTable holds the schema information for the "users" table.

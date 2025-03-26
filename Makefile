@@ -3,9 +3,9 @@ build: gen
 	@go build -o ./bin/auth ./cmd/auth/*.go
 
 .PHONY: run
-run: build
+run: build gen
 	@./bin/auth
 
 .PHONY: gen
-generate:
+gen:
 	@go generate ./ent

@@ -2,14 +2,16 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pilegoblin/garbanzo/ent"
 	"github.com/pilegoblin/garbanzo/ent/user"
 	"github.com/pilegoblin/garbanzo/internal/config"
-
-	_ "github.com/lib/pq"
 )
 
 type db struct {
@@ -17,11 +19,13 @@ type db struct {
 }
 
 func New(config *config.DatabaseConfig) *db {
-	client, err := ent.Open("postgres", config.DatabaseURL)
+	database, err := sql.Open("pgx", config.DatabaseURL)
 	if err != nil {
-		slog.Error("failed to open postgres client", "error", err)
+		slog.Error("failed to open database", "error", err)
 		os.Exit(1)
 	}
+	drv := entsql.OpenDB(dialect.Postgres, database)
+	client := ent.NewClient(ent.Driver(drv))
 	return &db{
 		client: client,
 	}

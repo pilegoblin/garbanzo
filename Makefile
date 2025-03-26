@@ -7,5 +7,5 @@ run: build
 	@./bin/auth
 
 .PHONY: gen
-generate: db
+generate:
 	@go generate ./ent

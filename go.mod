@@ -6,6 +6,7 @@ toolchain go1.23.0
 
 require (
 	entgo.io/ent v0.14.4
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/gorilla/sessions v1.1.1

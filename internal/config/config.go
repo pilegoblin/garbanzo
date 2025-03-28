@@ -1,8 +1,10 @@
 package config
 
 import (
+	"log/slog"
 	"os"
 
+	"github.com/caarlos0/env/v11"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -10,36 +12,29 @@ type Config struct {
 	Auth        AuthConfig
 	Database    DatabaseConfig
 	Server      ServerConfig
-	Environment string
+	Environment string `env:"ENVIRONMENT"`
 }
 
 type AuthConfig struct {
-	SessionSecret      string
-	GoogleClientID     string
-	GoogleClientSecret string
+	SessionSecret      string `env:"SESSION_SECRET"`
+	GoogleClientID     string `env:"GOOGLE_ID"`
+	GoogleClientSecret string `env:"GOOGLE_SECRET"`
 }
 
 type DatabaseConfig struct {
-	DatabaseURL string
+	DatabaseURL string `env:"DATABASE_URL"`
 }
 
 type ServerConfig struct {
-	Port string
+	Port string `env:"PORT"`
 }
 
 func New() *Config {
-	return &Config{
-		Auth: AuthConfig{
-			SessionSecret:      os.Getenv("SESSION_SECRET"),
-			GoogleClientID:     os.Getenv("GOOGLE_ID"),
-			GoogleClientSecret: os.Getenv("GOOGLE_SECRET"),
-		},
-		Database: DatabaseConfig{
-			DatabaseURL: os.Getenv("DATABASE_URL"),
-		},
-		Server: ServerConfig{
-			Port: os.Getenv("PORT"),
-		},
-		Environment: os.Getenv("ENVIRONMENT"),
+	var cfg Config
+	err := env.Parse(&cfg)
+	if err != nil {
+		slog.Error("Failed to parse config", "error", err)
+		os.Exit(1)
 	}
+	return &cfg
 }

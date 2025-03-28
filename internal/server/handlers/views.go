@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/pilegoblin/garbanzo/internal/server/middleware"
+	gbzocontext "github.com/pilegoblin/garbanzo/internal/context"
 )
 
 // GET /
@@ -19,7 +19,7 @@ func CreateUserViewHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /user
 func (h *HandlerEnv) UserViewHandler(w http.ResponseWriter, r *http.Request) {
-	email, ok := middleware.GetEmail(r.Context())
+	email, ok := gbzocontext.GetEmail(r.Context())
 	if !ok {
 		redirect(w, "/")
 		return

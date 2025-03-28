@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create User</title>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-</head>
-<body>
-    <h1>Create User</h1>
-    <form hx-post="/user/create">
-        <input type="text" name="username" placeholder="Username">
-        <button type="submit">Create User</button>
-    </form>
-</body>
-</html>
+{{define "title"}}New User{{end}} {{define "content"}}
+<h1>Create User</h1>
+<form hx-post="/user/create">
+    <input type="text" name="username" placeholder="Username">
+    <button
+        class="w-full py-2.5 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition duration-300 flex items-center justify-center"
+        type="submit">Create User
+    </button>
+</form>
+{{end}}

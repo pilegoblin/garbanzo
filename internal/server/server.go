@@ -56,7 +56,7 @@ func (s *Server) Run() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.EmailMiddleware)
 			// user routes
-			r.Get("/user", s.handler.UserHandler)
+			r.Get("/user", s.handler.UserViewHandler)
 			r.Get("/user/create", handlers.CreateUserViewHandler)
 			r.Post("/user/create", s.handler.CreateUserHandler)
 

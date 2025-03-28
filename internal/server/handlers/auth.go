@@ -42,7 +42,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sess.Values["email"] = user.Email
 	sess.Save(r, w)
-	redirect(w, "/")
+	redirect(w, "/user")
 }
 
 func redirect(w http.ResponseWriter, path string) {

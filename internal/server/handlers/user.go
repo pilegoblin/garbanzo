@@ -7,10 +7,10 @@ import (
 	"github.com/pilegoblin/garbanzo/internal/session"
 )
 
-// /user/create
+// POST /user/create
 func (h *HandlerEnv) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		redirect(w, "/user")
+		redirect(w, "/")
 		return
 	}
 	username := r.FormValue("username")
@@ -31,5 +31,5 @@ func (h *HandlerEnv) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("HX-Location", "/user")
+	w.Header().Set("HX-Location", "/")
 }

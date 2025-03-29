@@ -34,3 +34,12 @@ func GetEmail(r *http.Request) (string, error) {
 	}
 	return email, nil
 }
+
+func Logout(w http.ResponseWriter, r *http.Request) error {
+	session, err := GetSession(r)
+	if err != nil {
+		return err
+	}
+	session.Options.MaxAge = -1
+	return session.Save(r, w)
+}

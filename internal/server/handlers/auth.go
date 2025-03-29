@@ -8,25 +8,10 @@ import (
 	"github.com/pilegoblin/garbanzo/internal/session"
 )
 
-// GET /login
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.GetSession(r)
-	if err != nil {
-		redirect(w, "/auth?provider=google")
-		return
-	}
-	email := sess.Values["email"]
-	if email == nil {
-		redirect(w, "/auth?provider=google")
-		return
-	}
-	redirect(w, "/user")
-}
-
 // GET /logout
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	gothic.Logout(w, r)
-	redirect(w, "/")
+	session.Logout(w, r)
+	redirect(w, "/login")
 }
 
 // GET /auth
@@ -48,10 +33,5 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sess.Values["email"] = user.Email
 	sess.Save(r, w)
-	redirect(w, "/user")
-}
-
-func redirect(w http.ResponseWriter, path string) {
-	w.Header().Set("Location", path)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	redirect(w, "/")
 }

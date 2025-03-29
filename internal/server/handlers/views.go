@@ -8,17 +8,7 @@ import (
 )
 
 // GET /
-func IndexViewHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "login.html", nil)
-}
-
-// GET /user/create
-func CreateUserViewHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "new_user.html", nil)
-}
-
-// GET /user
-func (h *HandlerEnv) UserViewHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerEnv) IndexViewHandler(w http.ResponseWriter, r *http.Request) {
 	email, ok := gbzocontext.GetEmail(r.Context())
 	if !ok {
 		redirect(w, "/")
@@ -29,7 +19,16 @@ func (h *HandlerEnv) UserViewHandler(w http.ResponseWriter, r *http.Request) {
 		redirect(w, "/user/create")
 		return
 	}
-	renderTemplate(w, "user.html", user)
+	renderTemplate(w, "index.html", user)
+}
+
+func LoginViewHandler(w http.ResponseWriter, r *http.Request) {
+	renderTemplate(w, "login.html", nil)
+}
+
+// GET /user/create
+func CreateUserViewHandler(w http.ResponseWriter, r *http.Request) {
+	renderTemplate(w, "new_user.html", nil)
 }
 
 func renderTemplate(w http.ResponseWriter, name string, data any) {

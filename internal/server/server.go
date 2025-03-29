@@ -45,22 +45,19 @@ func (s *Server) Run() {
 		r.Use(chimiddleware.Recoverer)
 
 		// index route
-		r.Get("/", handlers.IndexViewHandler)
 
 		// auth routes
-		r.Get("/login", handlers.LoginHandler)
+		r.Get("/login", handlers.LoginViewHandler)
 		r.Get("/auth", handlers.AuthHandler)
 		r.Get("/auth/callback", handlers.CallbackHandler)
 		r.Get("/logout", handlers.LogoutHandler)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.EmailMiddleware)
+			r.Get("/", s.handler.IndexViewHandler)
 			// user routes
-			r.Get("/user", s.handler.UserViewHandler)
 			r.Get("/user/create", handlers.CreateUserViewHandler)
 			r.Post("/user/create", s.handler.CreateUserHandler)
-
-			// views
 		})
 
 	})

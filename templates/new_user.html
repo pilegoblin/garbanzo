@@ -1,10 +1,64 @@
 {{define "title"}}New User{{end}} {{define "content"}}
-<h1>Create User</h1>
-<form hx-post="/user/create">
-    <input type="text" name="username" placeholder="Username">
-    <button
-        class="w-full py-2.5 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition duration-300 flex items-center justify-center"
-        type="submit">Create User
-    </button>
-</form>
+<div class="flex justify-center items-center h-screen">
+    <div class="bg-stone-800 rounded-lg shadow-xl p-8 w-full max-w-md mx-4 border border-stone-700">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-white mb-2">Create Account</h1>
+            <p class="text-stone-300">Sign up to get started</p>
+        </div>
+
+        <form hx-post="/user/create" hx-swap="outerHTML" class="space-y-4">
+            <div>
+                <label for="name" class="block text-sm font-medium text-stone-300 mb-1">Username</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="h-5 w-5 text-stone-400">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <input type="text" name="username" placeholder="Greenbean17" required
+                        class="bg-stone-700 border border-stone-600 text-white pl-10 py-2.5 px-4 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+            </div>
+
+
+            <div class="pt-2">
+                <button type="submit"
+                    class="w-full py-2.5 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition duration-300 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="h-5 w-5 mr-2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    Create Account
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-6 flex items-center justify-center">
+            <div class="border-t border-stone-700 flex-grow"></div>
+            <span class="mx-4 text-stone-400 text-sm">or</span>
+            <div class="border-t border-stone-700 flex-grow"></div>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+            <a href="/login"
+                class="w-full py-2.5 px-4 bg-stone-700 hover:bg-stone-600 text-white font-medium rounded-lg transition duration-300 flex items-center justify-center border border-stone-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="h-5 w-5 mr-2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
+                Continue with Google
+            </a>
+        </div>
+    </div>
+</div>
 {{end}}

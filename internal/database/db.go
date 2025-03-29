@@ -10,6 +10,7 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pilegoblin/garbanzo/ent"
+	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/user"
 	"github.com/pilegoblin/garbanzo/internal/config"
 )
@@ -52,4 +53,35 @@ func (d *Database) CreateUser(ctx context.Context, email, username string) error
 		return err
 	}
 	return nil
+}
+
+func (d *Database) GetPosts(ctx context.Context) ([]*ent.Post, error) {
+	posts, err := d.client.Post.Query().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func (d *Database) CreatePost(ctx context.Context, user *ent.User, content string) (*ent.Post, error) {
+	post, err := d.client.Post.Create().SetContent(content).SetUser(user).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return post, nil
+}
+
+// PODS
+
+// check if user is in pod
+func (d *Database) IsUserInPod(ctx context.Context, userID int, podID int) (bool, error) {
+	userInPod, err := d.client.User.Query().
+		Where(user.ID(userID)).
+		QueryJoinedPods().
+		Where(pod.ID(podID)).
+		Exist(ctx)
+	if err != nil {
+		return false, err
+	}
+	return userInPod, nil
 }

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"html/template"
 	"net/http"
 
 	gbzocontext "github.com/pilegoblin/garbanzo/internal/context"
@@ -19,20 +18,23 @@ func (h *HandlerEnv) IndexViewHandler(w http.ResponseWriter, r *http.Request) {
 		redirect(w, "/user/create")
 		return
 	}
-	renderTemplate(w, "index.html", user)
+
+	renderTemplate(w, user, "index.html")
 }
 
 func LoginViewHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "login.html", nil)
+	renderTemplate(w, nil, "login.html")
 }
 
 // GET /user/create
 func CreateUserViewHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "new_user.html", nil)
+	renderTemplate(w, nil, "new_user.html")
 }
 
-func renderTemplate(w http.ResponseWriter, name string, data any) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl := template.Must(template.ParseFiles("templates/base.html", "templates/"+name))
-	tmpl.Execute(w, data)
+// GET /{podID}/{beanID}
+func BeanViewHandler(w http.ResponseWriter, r *http.Request) {
+	// podID := chi.URLParam(r, "podID")
+	// beanID := chi.URLParam(r, "beanID")
+
+	renderTemplate(w, nil, "bean.html")
 }

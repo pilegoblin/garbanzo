@@ -71,7 +71,7 @@ func (d *Database) GetPosts(ctx context.Context) ([]*ent.Post, error) {
 	return posts, nil
 }
 
-func (d *Database) CreatePost(ctx context.Context, userID int, content string, beanID int) (*ent.Post, error) {
+func (d *Database) CreatePost(ctx context.Context, userID int, beanID int, content string) (*ent.Post, error) {
 	post, err := d.client.Post.Create().SetContent(content).SetUserID(userID).SetBeanID(beanID).Save(ctx)
 	if err != nil {
 		return nil, err

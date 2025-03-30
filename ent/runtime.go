@@ -44,8 +44,12 @@ func init() {
 	post.DefaultCreatedAt = postDescCreatedAt.Default.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
+	// userDescAuthID is the schema descriptor for auth_id field.
+	userDescAuthID := userFields[0].Descriptor()
+	// user.AuthIDValidator is a validator for the "auth_id" field. It is called by the builders before save.
+	user.AuthIDValidator = userDescAuthID.Validators[0].(func(string) error)
 	// userDescEmail is the schema descriptor for email field.
-	userDescEmail := userFields[0].Descriptor()
+	userDescEmail := userFields[1].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = func() func(string) error {
 		validators := userDescEmail.Validators
@@ -63,11 +67,11 @@ func init() {
 		}
 	}()
 	// userDescUsername is the schema descriptor for username field.
-	userDescUsername := userFields[1].Descriptor()
+	userDescUsername := userFields[2].Descriptor()
 	// user.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	user.UsernameValidator = userDescUsername.Validators[0].(func(string) error)
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[3].Descriptor()
+	userDescCreatedAt := userFields[4].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 }

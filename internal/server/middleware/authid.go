@@ -7,15 +7,16 @@ import (
 	"github.com/pilegoblin/garbanzo/internal/session"
 )
 
-func EmailMiddleware(next http.Handler) http.Handler {
+func AuthIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		email, err := session.GetEmail(r)
+		authID, err := session.GetAuthID(r)
 		if err != nil {
 			w.Header().Set("Location", "/login")
 			w.WriteHeader(http.StatusTemporaryRedirect)
 			return
 		}
-		ctx := gbzocontext.SetEmail(r.Context(), email)
+
+		ctx := gbzocontext.SetAuthID(r.Context(), authID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

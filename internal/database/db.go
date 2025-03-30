@@ -39,20 +39,28 @@ func (d *Database) Migrate() {
 	}
 }
 
-func (d *Database) GetUser(ctx context.Context, email string) (*ent.User, error) {
-	user, err := d.client.User.Query().Where(user.Email(email)).First(ctx)
+func (d *Database) GetUserByID(ctx context.Context, id int) (*ent.User, error) {
+	user, err := d.client.User.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (d *Database) CreateUser(ctx context.Context, email, username string) error {
-	_, err := d.client.User.Create().SetEmail(email).SetUsername(username).Save(ctx)
+func (d *Database) GetUserByAuthID(ctx context.Context, authID string) (*ent.User, error) {
+	user, err := d.client.User.Query().Where(user.AuthID(authID)).First(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return user, nil
+}
+
+func (d *Database) CreateUser(ctx context.Context, authID, username, email string) (*ent.User, error) {
+	user, err := d.client.User.Create().SetAuthID(authID).SetUsername(username).SetEmail(email).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (d *Database) GetPosts(ctx context.Context) ([]*ent.Post, error) {
@@ -63,8 +71,8 @@ func (d *Database) GetPosts(ctx context.Context) ([]*ent.Post, error) {
 	return posts, nil
 }
 
-func (d *Database) CreatePost(ctx context.Context, user *ent.User, content string) (*ent.Post, error) {
-	post, err := d.client.Post.Create().SetContent(content).SetUser(user).Save(ctx)
+func (d *Database) CreatePost(ctx context.Context, userID int, content string, beanID int) (*ent.Post, error) {
+	post, err := d.client.Post.Create().SetContent(content).SetUserID(userID).SetBeanID(beanID).Save(ctx)
 	if err != nil {
 		return nil, err
 	}

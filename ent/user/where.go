@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldID, id))
 }
 
+// AuthID applies equality check predicate on the "auth_id" field. It's identical to AuthIDEQ.
+func AuthID(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAuthID, v))
+}
+
 // Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
 func Email(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEmail, v))
@@ -73,6 +78,71 @@ func Picture(v string) predicate.User {
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// AuthIDEQ applies the EQ predicate on the "auth_id" field.
+func AuthIDEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAuthID, v))
+}
+
+// AuthIDNEQ applies the NEQ predicate on the "auth_id" field.
+func AuthIDNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAuthID, v))
+}
+
+// AuthIDIn applies the In predicate on the "auth_id" field.
+func AuthIDIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAuthID, vs...))
+}
+
+// AuthIDNotIn applies the NotIn predicate on the "auth_id" field.
+func AuthIDNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAuthID, vs...))
+}
+
+// AuthIDGT applies the GT predicate on the "auth_id" field.
+func AuthIDGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAuthID, v))
+}
+
+// AuthIDGTE applies the GTE predicate on the "auth_id" field.
+func AuthIDGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAuthID, v))
+}
+
+// AuthIDLT applies the LT predicate on the "auth_id" field.
+func AuthIDLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAuthID, v))
+}
+
+// AuthIDLTE applies the LTE predicate on the "auth_id" field.
+func AuthIDLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAuthID, v))
+}
+
+// AuthIDContains applies the Contains predicate on the "auth_id" field.
+func AuthIDContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldAuthID, v))
+}
+
+// AuthIDHasPrefix applies the HasPrefix predicate on the "auth_id" field.
+func AuthIDHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldAuthID, v))
+}
+
+// AuthIDHasSuffix applies the HasSuffix predicate on the "auth_id" field.
+func AuthIDHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldAuthID, v))
+}
+
+// AuthIDEqualFold applies the EqualFold predicate on the "auth_id" field.
+func AuthIDEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldAuthID, v))
+}
+
+// AuthIDContainsFold applies the ContainsFold predicate on the "auth_id" field.
+func AuthIDContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldAuthID, v))
 }
 
 // EmailEQ applies the EQ predicate on the "email" field.

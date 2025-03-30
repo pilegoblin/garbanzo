@@ -31,6 +31,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 		return
 	}
+	sess.Values["authID"] = user.UserID
 	sess.Values["email"] = user.Email
 	sess.Save(r, w)
 	redirect(w, "/")

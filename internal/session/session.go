@@ -35,6 +35,35 @@ func GetEmail(r *http.Request) (string, error) {
 	return email, nil
 }
 
+func GetAuthID(r *http.Request) (string, error) {
+	session, err := GetSession(r)
+	if err != nil {
+		return "", err
+	}
+	authID, ok := session.Values["authID"].(string)
+	if !ok {
+		return "", errors.New("authID not found in session")
+	}
+	return authID, nil
+}
+
+func SetUserID(w http.ResponseWriter, r *http.Request, userID int) error {
+	session, err := GetSession(r)
+	if err != nil {
+		return err
+	}
+	session.Values["userID"] = userID
+	return session.Save(r, w)
+}
+
+func GetUserID(r *http.Request) (int, error) {
+	session, err := GetSession(r)
+	if err != nil {
+		return 0, err
+	}
+	return session.Values["userID"].(int), nil
+}
+
 func Logout(w http.ResponseWriter, r *http.Request) error {
 	session, err := GetSession(r)
 	if err != nil {

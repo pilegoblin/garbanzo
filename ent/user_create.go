@@ -22,6 +22,12 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetAuthID sets the "auth_id" field.
+func (uc *UserCreate) SetAuthID(s string) *UserCreate {
+	uc.mutation.SetAuthID(s)
+	return uc
+}
+
 // SetEmail sets the "email" field.
 func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	uc.mutation.SetEmail(s)
@@ -150,6 +156,14 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
+	if _, ok := uc.mutation.AuthID(); !ok {
+		return &ValidationError{Name: "auth_id", err: errors.New(`ent: missing required field "User.auth_id"`)}
+	}
+	if v, ok := uc.mutation.AuthID(); ok {
+		if err := user.AuthIDValidator(v); err != nil {
+			return &ValidationError{Name: "auth_id", err: fmt.Errorf(`ent: validator failed for field "User.auth_id": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
@@ -195,6 +209,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node = &User{config: uc.config}
 		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	)
+	if value, ok := uc.mutation.AuthID(); ok {
+		_spec.SetField(user.FieldAuthID, field.TypeString, value)
+		_node.AuthID = value
+	}
 	if value, ok := uc.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value

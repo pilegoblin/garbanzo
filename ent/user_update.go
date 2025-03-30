@@ -30,6 +30,20 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
+// SetAuthID sets the "auth_id" field.
+func (uu *UserUpdate) SetAuthID(s string) *UserUpdate {
+	uu.mutation.SetAuthID(s)
+	return uu
+}
+
+// SetNillableAuthID sets the "auth_id" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableAuthID(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetAuthID(*s)
+	}
+	return uu
+}
+
 // SetEmail sets the "email" field.
 func (uu *UserUpdate) SetEmail(s string) *UserUpdate {
 	uu.mutation.SetEmail(s)
@@ -234,6 +248,11 @@ func (uu *UserUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uu *UserUpdate) check() error {
+	if v, ok := uu.mutation.AuthID(); ok {
+		if err := user.AuthIDValidator(v); err != nil {
+			return &ValidationError{Name: "auth_id", err: fmt.Errorf(`ent: validator failed for field "User.auth_id": %w`, err)}
+		}
+	}
 	if v, ok := uu.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
@@ -258,6 +277,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := uu.mutation.AuthID(); ok {
+		_spec.SetField(user.FieldAuthID, field.TypeString, value)
 	}
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
@@ -427,6 +449,20 @@ type UserUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *UserMutation
+}
+
+// SetAuthID sets the "auth_id" field.
+func (uuo *UserUpdateOne) SetAuthID(s string) *UserUpdateOne {
+	uuo.mutation.SetAuthID(s)
+	return uuo
+}
+
+// SetNillableAuthID sets the "auth_id" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableAuthID(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetAuthID(*s)
+	}
+	return uuo
 }
 
 // SetEmail sets the "email" field.
@@ -646,6 +682,11 @@ func (uuo *UserUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uuo *UserUpdateOne) check() error {
+	if v, ok := uuo.mutation.AuthID(); ok {
+		if err := user.AuthIDValidator(v); err != nil {
+			return &ValidationError{Name: "auth_id", err: fmt.Errorf(`ent: validator failed for field "User.auth_id": %w`, err)}
+		}
+	}
 	if v, ok := uuo.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
@@ -687,6 +728,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := uuo.mutation.AuthID(); ok {
+		_spec.SetField(user.FieldAuthID, field.TypeString, value)
 	}
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)

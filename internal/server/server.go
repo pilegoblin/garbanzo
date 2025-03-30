@@ -53,11 +53,11 @@ func (s *Server) Run() {
 		r.Get("/logout", handlers.LogoutHandler)
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.EmailMiddleware)
+			r.Use(middleware.AuthIDMiddleware)
 			r.Get("/", s.handler.IndexViewHandler)
 			// user routes
-			r.Get("/user/create", handlers.CreateUserViewHandler)
-			r.Post("/user/create", s.handler.CreateUserHandler)
+			r.Get("/user/new", handlers.NewUserViewHandler)
+			r.Post("/user/new", s.handler.NewUserHandler)
 		})
 
 	})

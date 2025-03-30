@@ -14,6 +14,8 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldAuthID holds the string denoting the auth_id field in the database.
+	FieldAuthID = "auth_id"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldUsername holds the string denoting the username field in the database.
@@ -54,6 +56,7 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldAuthID,
 	FieldEmail,
 	FieldUsername,
 	FieldPicture,
@@ -77,6 +80,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// AuthIDValidator is a validator for the "auth_id" field. It is called by the builders before save.
+	AuthIDValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
@@ -91,6 +96,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByAuthID orders the results by the auth_id field.
+func ByAuthID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAuthID, opts...).ToFunc()
 }
 
 // ByEmail orders the results by the email field.

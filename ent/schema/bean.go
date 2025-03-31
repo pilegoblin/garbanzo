@@ -23,5 +23,8 @@ func (Bean) Fields() []ent.Field {
 func (Bean) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("posts", Post.Type),
+		edge.From("pod", Pod.Type).
+			Ref("beans").
+			Unique(),
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/pilegoblin/garbanzo/ent/bean"
+	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/post"
 	"github.com/pilegoblin/garbanzo/ent/predicate"
 )
@@ -25,6 +26,8 @@ type BeanQuery struct {
 	inters     []Interceptor
 	predicates []predicate.Bean
 	withPosts  *PostQuery
+	withPod    *PodQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,28 @@ func (bq *BeanQuery) QueryPosts() *PostQuery {
 			sqlgraph.From(bean.Table, bean.FieldID, selector),
 			sqlgraph.To(post.Table, post.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, bean.PostsTable, bean.PostsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPod chains the current query on the "pod" edge.
+func (bq *BeanQuery) QueryPod() *PodQuery {
+	query := (&PodClient{config: bq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := bq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := bq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bean.Table, bean.FieldID, selector),
+			sqlgraph.To(pod.Table, pod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, bean.PodTable, bean.PodColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
 		return fromU, nil
@@ -276,6 +301,7 @@ func (bq *BeanQuery) Clone() *BeanQuery {
 		inters:     append([]Interceptor{}, bq.inters...),
 		predicates: append([]predicate.Bean{}, bq.predicates...),
 		withPosts:  bq.withPosts.Clone(),
+		withPod:    bq.withPod.Clone(),
 		// clone intermediate query.
 		sql:  bq.sql.Clone(),
 		path: bq.path,
@@ -290,6 +316,17 @@ func (bq *BeanQuery) WithPosts(opts ...func(*PostQuery)) *BeanQuery {
 		opt(query)
 	}
 	bq.withPosts = query
+	return bq
+}
+
+// WithPod tells the query-builder to eager-load the nodes that are connected to
+// the "pod" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BeanQuery) WithPod(opts ...func(*PodQuery)) *BeanQuery {
+	query := (&PodClient{config: bq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	bq.withPod = query
 	return bq
 }
 
@@ -370,11 +407,19 @@ func (bq *BeanQuery) prepareQuery(ctx context.Context) error {
 func (bq *BeanQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Bean, error) {
 	var (
 		nodes       = []*Bean{}
+		withFKs     = bq.withFKs
 		_spec       = bq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			bq.withPosts != nil,
+			bq.withPod != nil,
 		}
 	)
+	if bq.withPod != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, bean.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Bean).scanValues(nil, columns)
 	}
@@ -397,6 +442,12 @@ func (bq *BeanQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Bean, e
 		if err := bq.loadPosts(ctx, query, nodes,
 			func(n *Bean) { n.Edges.Posts = []*Post{} },
 			func(n *Bean, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := bq.withPod; query != nil {
+		if err := bq.loadPod(ctx, query, nodes, nil,
+			func(n *Bean, e *Pod) { n.Edges.Pod = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -431,6 +482,38 @@ func (bq *BeanQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*B
 			return fmt.Errorf(`unexpected referenced foreign-key "bean_posts" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (bq *BeanQuery) loadPod(ctx context.Context, query *PodQuery, nodes []*Bean, init func(*Bean), assign func(*Bean, *Pod)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Bean)
+	for i := range nodes {
+		if nodes[i].pod_beans == nil {
+			continue
+		}
+		fk := *nodes[i].pod_beans
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(pod.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "pod_beans" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

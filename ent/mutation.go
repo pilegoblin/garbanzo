@@ -44,6 +44,8 @@ type BeanMutation struct {
 	posts         map[int]struct{}
 	removedposts  map[int]struct{}
 	clearedposts  bool
+	pod           *int
+	clearedpod    bool
 	done          bool
 	oldValue      func(context.Context) (*Bean, error)
 	predicates    []predicate.Bean
@@ -237,6 +239,45 @@ func (m *BeanMutation) ResetPosts() {
 	m.removedposts = nil
 }
 
+// SetPodID sets the "pod" edge to the Pod entity by id.
+func (m *BeanMutation) SetPodID(id int) {
+	m.pod = &id
+}
+
+// ClearPod clears the "pod" edge to the Pod entity.
+func (m *BeanMutation) ClearPod() {
+	m.clearedpod = true
+}
+
+// PodCleared reports if the "pod" edge to the Pod entity was cleared.
+func (m *BeanMutation) PodCleared() bool {
+	return m.clearedpod
+}
+
+// PodID returns the "pod" edge ID in the mutation.
+func (m *BeanMutation) PodID() (id int, exists bool) {
+	if m.pod != nil {
+		return *m.pod, true
+	}
+	return
+}
+
+// PodIDs returns the "pod" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PodID instead. It exists only for internal usage by the builders.
+func (m *BeanMutation) PodIDs() (ids []int) {
+	if id := m.pod; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPod resets all changes to the "pod" edge.
+func (m *BeanMutation) ResetPod() {
+	m.pod = nil
+	m.clearedpod = false
+}
+
 // Where appends a list predicates to the BeanMutation builder.
 func (m *BeanMutation) Where(ps ...predicate.Bean) {
 	m.predicates = append(m.predicates, ps...)
@@ -370,9 +411,12 @@ func (m *BeanMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BeanMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.posts != nil {
 		edges = append(edges, bean.EdgePosts)
+	}
+	if m.pod != nil {
+		edges = append(edges, bean.EdgePod)
 	}
 	return edges
 }
@@ -387,13 +431,17 @@ func (m *BeanMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case bean.EdgePod:
+		if id := m.pod; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BeanMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedposts != nil {
 		edges = append(edges, bean.EdgePosts)
 	}
@@ -416,9 +464,12 @@ func (m *BeanMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BeanMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedposts {
 		edges = append(edges, bean.EdgePosts)
+	}
+	if m.clearedpod {
+		edges = append(edges, bean.EdgePod)
 	}
 	return edges
 }
@@ -429,6 +480,8 @@ func (m *BeanMutation) EdgeCleared(name string) bool {
 	switch name {
 	case bean.EdgePosts:
 		return m.clearedposts
+	case bean.EdgePod:
+		return m.clearedpod
 	}
 	return false
 }
@@ -437,6 +490,9 @@ func (m *BeanMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *BeanMutation) ClearEdge(name string) error {
 	switch name {
+	case bean.EdgePod:
+		m.ClearPod()
+		return nil
 	}
 	return fmt.Errorf("unknown Bean unique edge %s", name)
 }
@@ -447,6 +503,9 @@ func (m *BeanMutation) ResetEdge(name string) error {
 	switch name {
 	case bean.EdgePosts:
 		m.ResetPosts()
+		return nil
+	case bean.EdgePod:
+		m.ResetPod()
 		return nil
 	}
 	return fmt.Errorf("unknown Bean edge %s", name)
@@ -460,12 +519,16 @@ type PodMutation struct {
 	id            *int
 	pod_name      *string
 	created_at    *time.Time
+	invite_code   *string
 	clearedFields map[string]struct{}
 	owner         *int
 	clearedowner  bool
 	users         map[int]struct{}
 	removedusers  map[int]struct{}
 	clearedusers  bool
+	beans         map[int]struct{}
+	removedbeans  map[int]struct{}
+	clearedbeans  bool
 	done          bool
 	oldValue      func(context.Context) (*Pod, error)
 	predicates    []predicate.Pod
@@ -641,6 +704,42 @@ func (m *PodMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (m *PodMutation) SetInviteCode(s string) {
+	m.invite_code = &s
+}
+
+// InviteCode returns the value of the "invite_code" field in the mutation.
+func (m *PodMutation) InviteCode() (r string, exists bool) {
+	v := m.invite_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInviteCode returns the old "invite_code" field's value of the Pod entity.
+// If the Pod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PodMutation) OldInviteCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInviteCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInviteCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInviteCode: %w", err)
+	}
+	return oldValue.InviteCode, nil
+}
+
+// ResetInviteCode resets all changes to the "invite_code" field.
+func (m *PodMutation) ResetInviteCode() {
+	m.invite_code = nil
+}
+
 // SetOwnerID sets the "owner" edge to the User entity by id.
 func (m *PodMutation) SetOwnerID(id int) {
 	m.owner = &id
@@ -734,6 +833,60 @@ func (m *PodMutation) ResetUsers() {
 	m.removedusers = nil
 }
 
+// AddBeanIDs adds the "beans" edge to the Bean entity by ids.
+func (m *PodMutation) AddBeanIDs(ids ...int) {
+	if m.beans == nil {
+		m.beans = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.beans[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBeans clears the "beans" edge to the Bean entity.
+func (m *PodMutation) ClearBeans() {
+	m.clearedbeans = true
+}
+
+// BeansCleared reports if the "beans" edge to the Bean entity was cleared.
+func (m *PodMutation) BeansCleared() bool {
+	return m.clearedbeans
+}
+
+// RemoveBeanIDs removes the "beans" edge to the Bean entity by IDs.
+func (m *PodMutation) RemoveBeanIDs(ids ...int) {
+	if m.removedbeans == nil {
+		m.removedbeans = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.beans, ids[i])
+		m.removedbeans[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBeans returns the removed IDs of the "beans" edge to the Bean entity.
+func (m *PodMutation) RemovedBeansIDs() (ids []int) {
+	for id := range m.removedbeans {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BeansIDs returns the "beans" edge IDs in the mutation.
+func (m *PodMutation) BeansIDs() (ids []int) {
+	for id := range m.beans {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBeans resets all changes to the "beans" edge.
+func (m *PodMutation) ResetBeans() {
+	m.beans = nil
+	m.clearedbeans = false
+	m.removedbeans = nil
+}
+
 // Where appends a list predicates to the PodMutation builder.
 func (m *PodMutation) Where(ps ...predicate.Pod) {
 	m.predicates = append(m.predicates, ps...)
@@ -768,12 +921,15 @@ func (m *PodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PodMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.pod_name != nil {
 		fields = append(fields, pod.FieldPodName)
 	}
 	if m.created_at != nil {
 		fields = append(fields, pod.FieldCreatedAt)
+	}
+	if m.invite_code != nil {
+		fields = append(fields, pod.FieldInviteCode)
 	}
 	return fields
 }
@@ -787,6 +943,8 @@ func (m *PodMutation) Field(name string) (ent.Value, bool) {
 		return m.PodName()
 	case pod.FieldCreatedAt:
 		return m.CreatedAt()
+	case pod.FieldInviteCode:
+		return m.InviteCode()
 	}
 	return nil, false
 }
@@ -800,6 +958,8 @@ func (m *PodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldPodName(ctx)
 	case pod.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
+	case pod.FieldInviteCode:
+		return m.OldInviteCode(ctx)
 	}
 	return nil, fmt.Errorf("unknown Pod field %s", name)
 }
@@ -822,6 +982,13 @@ func (m *PodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
+		return nil
+	case pod.FieldInviteCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInviteCode(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Pod field %s", name)
@@ -878,18 +1045,24 @@ func (m *PodMutation) ResetField(name string) error {
 	case pod.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
+	case pod.FieldInviteCode:
+		m.ResetInviteCode()
+		return nil
 	}
 	return fmt.Errorf("unknown Pod field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PodMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.owner != nil {
 		edges = append(edges, pod.EdgeOwner)
 	}
 	if m.users != nil {
 		edges = append(edges, pod.EdgeUsers)
+	}
+	if m.beans != nil {
+		edges = append(edges, pod.EdgeBeans)
 	}
 	return edges
 }
@@ -908,15 +1081,24 @@ func (m *PodMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case pod.EdgeBeans:
+		ids := make([]ent.Value, 0, len(m.beans))
+		for id := range m.beans {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PodMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedusers != nil {
 		edges = append(edges, pod.EdgeUsers)
+	}
+	if m.removedbeans != nil {
+		edges = append(edges, pod.EdgeBeans)
 	}
 	return edges
 }
@@ -931,18 +1113,27 @@ func (m *PodMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case pod.EdgeBeans:
+		ids := make([]ent.Value, 0, len(m.removedbeans))
+		for id := range m.removedbeans {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PodMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedowner {
 		edges = append(edges, pod.EdgeOwner)
 	}
 	if m.clearedusers {
 		edges = append(edges, pod.EdgeUsers)
+	}
+	if m.clearedbeans {
+		edges = append(edges, pod.EdgeBeans)
 	}
 	return edges
 }
@@ -955,6 +1146,8 @@ func (m *PodMutation) EdgeCleared(name string) bool {
 		return m.clearedowner
 	case pod.EdgeUsers:
 		return m.clearedusers
+	case pod.EdgeBeans:
+		return m.clearedbeans
 	}
 	return false
 }
@@ -979,6 +1172,9 @@ func (m *PodMutation) ResetEdge(name string) error {
 		return nil
 	case pod.EdgeUsers:
 		m.ResetUsers()
+		return nil
+	case pod.EdgeBeans:
+		m.ResetBeans()
 		return nil
 	}
 	return fmt.Errorf("unknown Pod edge %s", name)

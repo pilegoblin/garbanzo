@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/pilegoblin/garbanzo/ent/bean"
+	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/post"
 	"github.com/pilegoblin/garbanzo/ent/predicate"
 )
@@ -57,6 +58,25 @@ func (bu *BeanUpdate) AddPosts(p ...*Post) *BeanUpdate {
 	return bu.AddPostIDs(ids...)
 }
 
+// SetPodID sets the "pod" edge to the Pod entity by ID.
+func (bu *BeanUpdate) SetPodID(id int) *BeanUpdate {
+	bu.mutation.SetPodID(id)
+	return bu
+}
+
+// SetNillablePodID sets the "pod" edge to the Pod entity by ID if the given value is not nil.
+func (bu *BeanUpdate) SetNillablePodID(id *int) *BeanUpdate {
+	if id != nil {
+		bu = bu.SetPodID(*id)
+	}
+	return bu
+}
+
+// SetPod sets the "pod" edge to the Pod entity.
+func (bu *BeanUpdate) SetPod(p *Pod) *BeanUpdate {
+	return bu.SetPodID(p.ID)
+}
+
 // Mutation returns the BeanMutation object of the builder.
 func (bu *BeanUpdate) Mutation() *BeanMutation {
 	return bu.mutation
@@ -81,6 +101,12 @@ func (bu *BeanUpdate) RemovePosts(p ...*Post) *BeanUpdate {
 		ids[i] = p[i].ID
 	}
 	return bu.RemovePostIDs(ids...)
+}
+
+// ClearPod clears the "pod" edge to the Pod entity.
+func (bu *BeanUpdate) ClearPod() *BeanUpdate {
+	bu.mutation.ClearPod()
+	return bu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -180,6 +206,35 @@ func (bu *BeanUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if bu.mutation.PodCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bean.PodTable,
+			Columns: []string{bean.PodColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pod.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.PodIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bean.PodTable,
+			Columns: []string{bean.PodColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pod.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, bu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{bean.Label}
@@ -229,6 +284,25 @@ func (buo *BeanUpdateOne) AddPosts(p ...*Post) *BeanUpdateOne {
 	return buo.AddPostIDs(ids...)
 }
 
+// SetPodID sets the "pod" edge to the Pod entity by ID.
+func (buo *BeanUpdateOne) SetPodID(id int) *BeanUpdateOne {
+	buo.mutation.SetPodID(id)
+	return buo
+}
+
+// SetNillablePodID sets the "pod" edge to the Pod entity by ID if the given value is not nil.
+func (buo *BeanUpdateOne) SetNillablePodID(id *int) *BeanUpdateOne {
+	if id != nil {
+		buo = buo.SetPodID(*id)
+	}
+	return buo
+}
+
+// SetPod sets the "pod" edge to the Pod entity.
+func (buo *BeanUpdateOne) SetPod(p *Pod) *BeanUpdateOne {
+	return buo.SetPodID(p.ID)
+}
+
 // Mutation returns the BeanMutation object of the builder.
 func (buo *BeanUpdateOne) Mutation() *BeanMutation {
 	return buo.mutation
@@ -253,6 +327,12 @@ func (buo *BeanUpdateOne) RemovePosts(p ...*Post) *BeanUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return buo.RemovePostIDs(ids...)
+}
+
+// ClearPod clears the "pod" edge to the Pod entity.
+func (buo *BeanUpdateOne) ClearPod() *BeanUpdateOne {
+	buo.mutation.ClearPod()
+	return buo
 }
 
 // Where appends a list predicates to the BeanUpdate builder.
@@ -375,6 +455,35 @@ func (buo *BeanUpdateOne) sqlSave(ctx context.Context) (_node *Bean, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if buo.mutation.PodCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bean.PodTable,
+			Columns: []string{bean.PodColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pod.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.PodIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bean.PodTable,
+			Columns: []string{bean.PodColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pod.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -61,7 +61,11 @@ func GetUserID(r *http.Request) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return session.Values["userID"].(int), nil
+	userID, ok := session.Values["userID"].(int)
+	if !ok {
+		return 0, errors.New("userID not found in session")
+	}
+	return userID, nil
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) error {

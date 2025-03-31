@@ -31,7 +31,14 @@ func (h *HandlerEnv) IndexViewHandler(w http.ResponseWriter, r *http.Request) {
 		session.SetUserID(w, r, user.ID)
 	}
 
-	renderTemplate(w, user, "index.html")
+	pods := user.Edges.JoinedPods
+
+	if len(pods) == 0 {
+		renderTemplate(w, nil, "join_pod.html")
+		return
+	}
+
+	renderTemplate(w, pods, "index.html")
 }
 
 // GET /login
@@ -115,6 +122,7 @@ func BeanViewHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, nil, "bean.html")
 }
 
+// POST /{podID}/{beanID}/post
 func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 	content := r.FormValue("content")
 
@@ -129,11 +137,51 @@ func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := h.db.CreatePost(r.Context(), userID, beanID, content)
+	p, err := h.db.CreatePost(r.Context(), userID, beanID, content)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	renderTemplate(w, post, "post.html")
+	renderTemplateRaw(w, p, "post.html")
+}
+
+// POST /pod/join
+func (h *HandlerEnv) JoinPodHandler(w http.ResponseWriter, r *http.Request) {
+	inviteCode := r.FormValue("invite")
+	userID, err := session.GetUserID(r)
+	if err != nil {
+		redirect(w, "/login")
+		return
+	}
+
+	_, err = h.db.JoinPod(r.Context(), userID, inviteCode)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Location", "/")
+}
+
+// GET /pod/{podID}
+func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
+	podID := chi.URLParam(r, "podID")
+	podIDInt, err := strconv.Atoi(podID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	userID, err := session.GetUserID(r)
+	if err != nil {
+		redirect(w, "/login")
+		return
+	}
+	beans, err := h.db.GetBeans(r.Context(), userID, podIDInt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	renderTemplate(w, beans[0], "bean.html")
 }

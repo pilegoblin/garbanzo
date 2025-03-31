@@ -22,6 +22,8 @@ type Pod struct {
 	PodName string `json:"pod_name,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
+	// InviteCode holds the value of the "invite_code" field.
+	InviteCode string `json:"invite_code,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PodQuery when eager-loading is set.
 	Edges           PodEdges `json:"edges"`
@@ -35,9 +37,11 @@ type PodEdges struct {
 	Owner *User `json:"owner,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
+	// Beans holds the value of the beans edge.
+	Beans []*Bean `json:"beans,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -60,6 +64,15 @@ func (e PodEdges) UsersOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "users"}
 }
 
+// BeansOrErr returns the Beans value or an error if the edge
+// was not loaded in eager-loading.
+func (e PodEdges) BeansOrErr() ([]*Bean, error) {
+	if e.loadedTypes[2] {
+		return e.Beans, nil
+	}
+	return nil, &NotLoadedError{edge: "beans"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Pod) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -67,7 +80,7 @@ func (*Pod) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case pod.FieldID:
 			values[i] = new(sql.NullInt64)
-		case pod.FieldPodName:
+		case pod.FieldPodName, pod.FieldInviteCode:
 			values[i] = new(sql.NullString)
 		case pod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -106,6 +119,12 @@ func (po *Pod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				po.CreatedAt = value.Time
 			}
+		case pod.FieldInviteCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field invite_code", values[i])
+			} else if value.Valid {
+				po.InviteCode = value.String
+			}
 		case pod.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field user_owned_pods", value)
@@ -136,6 +155,11 @@ func (po *Pod) QueryUsers() *UserQuery {
 	return NewPodClient(po.config).QueryUsers(po)
 }
 
+// QueryBeans queries the "beans" edge of the Pod entity.
+func (po *Pod) QueryBeans() *BeanQuery {
+	return NewPodClient(po.config).QueryBeans(po)
+}
+
 // Update returns a builder for updating this Pod.
 // Note that you need to call Pod.Unwrap() before calling this method if this Pod
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -164,6 +188,9 @@ func (po *Pod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(po.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("invite_code=")
+	builder.WriteString(po.InviteCode)
 	builder.WriteByte(')')
 	return builder.String()
 }

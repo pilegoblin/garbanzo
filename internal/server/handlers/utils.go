@@ -31,3 +31,12 @@ func renderTemplate(w http.ResponseWriter, data any, files ...string) {
 	tmpl := template.Must(template.ParseFiles(files...))
 	tmpl.Execute(w, data)
 }
+
+func renderTemplateRaw(w http.ResponseWriter, data any, files ...string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	for i, file := range files {
+		files[i] = "templates/" + file
+	}
+	tmpl := template.Must(template.ParseFiles(files...))
+	tmpl.Execute(w, data)
+}

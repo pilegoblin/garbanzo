@@ -65,6 +65,11 @@ func CreatedAt(v time.Time) predicate.Pod {
 	return predicate.Pod(sql.FieldEQ(FieldCreatedAt, v))
 }
 
+// InviteCode applies equality check predicate on the "invite_code" field. It's identical to InviteCodeEQ.
+func InviteCode(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldEQ(FieldInviteCode, v))
+}
+
 // PodNameEQ applies the EQ predicate on the "pod_name" field.
 func PodNameEQ(v string) predicate.Pod {
 	return predicate.Pod(sql.FieldEQ(FieldPodName, v))
@@ -170,6 +175,71 @@ func CreatedAtLTE(v time.Time) predicate.Pod {
 	return predicate.Pod(sql.FieldLTE(FieldCreatedAt, v))
 }
 
+// InviteCodeEQ applies the EQ predicate on the "invite_code" field.
+func InviteCodeEQ(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldEQ(FieldInviteCode, v))
+}
+
+// InviteCodeNEQ applies the NEQ predicate on the "invite_code" field.
+func InviteCodeNEQ(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldNEQ(FieldInviteCode, v))
+}
+
+// InviteCodeIn applies the In predicate on the "invite_code" field.
+func InviteCodeIn(vs ...string) predicate.Pod {
+	return predicate.Pod(sql.FieldIn(FieldInviteCode, vs...))
+}
+
+// InviteCodeNotIn applies the NotIn predicate on the "invite_code" field.
+func InviteCodeNotIn(vs ...string) predicate.Pod {
+	return predicate.Pod(sql.FieldNotIn(FieldInviteCode, vs...))
+}
+
+// InviteCodeGT applies the GT predicate on the "invite_code" field.
+func InviteCodeGT(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldGT(FieldInviteCode, v))
+}
+
+// InviteCodeGTE applies the GTE predicate on the "invite_code" field.
+func InviteCodeGTE(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldGTE(FieldInviteCode, v))
+}
+
+// InviteCodeLT applies the LT predicate on the "invite_code" field.
+func InviteCodeLT(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldLT(FieldInviteCode, v))
+}
+
+// InviteCodeLTE applies the LTE predicate on the "invite_code" field.
+func InviteCodeLTE(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldLTE(FieldInviteCode, v))
+}
+
+// InviteCodeContains applies the Contains predicate on the "invite_code" field.
+func InviteCodeContains(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldContains(FieldInviteCode, v))
+}
+
+// InviteCodeHasPrefix applies the HasPrefix predicate on the "invite_code" field.
+func InviteCodeHasPrefix(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldHasPrefix(FieldInviteCode, v))
+}
+
+// InviteCodeHasSuffix applies the HasSuffix predicate on the "invite_code" field.
+func InviteCodeHasSuffix(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldHasSuffix(FieldInviteCode, v))
+}
+
+// InviteCodeEqualFold applies the EqualFold predicate on the "invite_code" field.
+func InviteCodeEqualFold(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldEqualFold(FieldInviteCode, v))
+}
+
+// InviteCodeContainsFold applies the ContainsFold predicate on the "invite_code" field.
+func InviteCodeContainsFold(v string) predicate.Pod {
+	return predicate.Pod(sql.FieldContainsFold(FieldInviteCode, v))
+}
+
 // HasOwner applies the HasEdge predicate on the "owner" edge.
 func HasOwner() predicate.Pod {
 	return predicate.Pod(func(s *sql.Selector) {
@@ -208,6 +278,29 @@ func HasUsers() predicate.Pod {
 func HasUsersWith(preds ...predicate.User) predicate.Pod {
 	return predicate.Pod(func(s *sql.Selector) {
 		step := newUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasBeans applies the HasEdge predicate on the "beans" edge.
+func HasBeans() predicate.Pod {
+	return predicate.Pod(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BeansTable, BeansColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBeansWith applies the HasEdge predicate on the "beans" edge with a given conditions (other predicates).
+func HasBeansWith(preds ...predicate.Bean) predicate.Pod {
+	return predicate.Pod(func(s *sql.Selector) {
+		step := newBeansStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

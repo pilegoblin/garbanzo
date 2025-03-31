@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/pilegoblin/garbanzo/ent/bean"
+	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/post"
 )
 
@@ -39,6 +40,25 @@ func (bc *BeanCreate) AddPosts(p ...*Post) *BeanCreate {
 		ids[i] = p[i].ID
 	}
 	return bc.AddPostIDs(ids...)
+}
+
+// SetPodID sets the "pod" edge to the Pod entity by ID.
+func (bc *BeanCreate) SetPodID(id int) *BeanCreate {
+	bc.mutation.SetPodID(id)
+	return bc
+}
+
+// SetNillablePodID sets the "pod" edge to the Pod entity by ID if the given value is not nil.
+func (bc *BeanCreate) SetNillablePodID(id *int) *BeanCreate {
+	if id != nil {
+		bc = bc.SetPodID(*id)
+	}
+	return bc
+}
+
+// SetPod sets the "pod" edge to the Pod entity.
+func (bc *BeanCreate) SetPod(p *Pod) *BeanCreate {
+	return bc.SetPodID(p.ID)
 }
 
 // Mutation returns the BeanMutation object of the builder.
@@ -127,6 +147,23 @@ func (bc *BeanCreate) createSpec() (*Bean, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bc.mutation.PodIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bean.PodTable,
+			Columns: []string{bean.PodColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pod.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.pod_beans = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

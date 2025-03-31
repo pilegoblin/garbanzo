@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/pilegoblin/garbanzo/ent/bean"
+	"github.com/pilegoblin/garbanzo/ent/pod"
 )
 
 // Bean is the model entity for the Bean schema.
@@ -21,6 +22,7 @@ type Bean struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BeanQuery when eager-loading is set.
 	Edges        BeanEdges `json:"edges"`
+	pod_beans    *int
 	selectValues sql.SelectValues
 }
 
@@ -28,9 +30,11 @@ type Bean struct {
 type BeanEdges struct {
 	// Posts holds the value of the posts edge.
 	Posts []*Post `json:"posts,omitempty"`
+	// Pod holds the value of the pod edge.
+	Pod *Pod `json:"pod,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // PostsOrErr returns the Posts value or an error if the edge
@@ -42,6 +46,17 @@ func (e BeanEdges) PostsOrErr() ([]*Post, error) {
 	return nil, &NotLoadedError{edge: "posts"}
 }
 
+// PodOrErr returns the Pod value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e BeanEdges) PodOrErr() (*Pod, error) {
+	if e.Pod != nil {
+		return e.Pod, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: pod.Label}
+	}
+	return nil, &NotLoadedError{edge: "pod"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Bean) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -51,6 +66,8 @@ func (*Bean) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case bean.FieldName:
 			values[i] = new(sql.NullString)
+		case bean.ForeignKeys[0]: // pod_beans
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -78,6 +95,13 @@ func (b *Bean) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				b.Name = value.String
 			}
+		case bean.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field pod_beans", value)
+			} else if value.Valid {
+				b.pod_beans = new(int)
+				*b.pod_beans = int(value.Int64)
+			}
 		default:
 			b.selectValues.Set(columns[i], values[i])
 		}
@@ -94,6 +118,11 @@ func (b *Bean) Value(name string) (ent.Value, error) {
 // QueryPosts queries the "posts" edge of the Bean entity.
 func (b *Bean) QueryPosts() *PostQuery {
 	return NewBeanClient(b.config).QueryPosts(b)
+}
+
+// QueryPod queries the "pod" edge of the Bean entity.
+func (b *Bean) QueryPod() *PodQuery {
+	return NewBeanClient(b.config).QueryPod(b)
 }
 
 // Update returns a builder for updating this Bean.

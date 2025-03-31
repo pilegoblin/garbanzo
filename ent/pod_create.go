@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/pilegoblin/garbanzo/ent/bean"
 	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/user"
 )
@@ -38,6 +39,12 @@ func (pc *PodCreate) SetNillableCreatedAt(t *time.Time) *PodCreate {
 	if t != nil {
 		pc.SetCreatedAt(*t)
 	}
+	return pc
+}
+
+// SetInviteCode sets the "invite_code" field.
+func (pc *PodCreate) SetInviteCode(s string) *PodCreate {
+	pc.mutation.SetInviteCode(s)
 	return pc
 }
 
@@ -73,6 +80,21 @@ func (pc *PodCreate) AddUsers(u ...*User) *PodCreate {
 		ids[i] = u[i].ID
 	}
 	return pc.AddUserIDs(ids...)
+}
+
+// AddBeanIDs adds the "beans" edge to the Bean entity by IDs.
+func (pc *PodCreate) AddBeanIDs(ids ...int) *PodCreate {
+	pc.mutation.AddBeanIDs(ids...)
+	return pc
+}
+
+// AddBeans adds the "beans" edges to the Bean entity.
+func (pc *PodCreate) AddBeans(b ...*Bean) *PodCreate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return pc.AddBeanIDs(ids...)
 }
 
 // Mutation returns the PodMutation object of the builder.
@@ -129,6 +151,9 @@ func (pc *PodCreate) check() error {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Pod.created_at"`)}
 	}
+	if _, ok := pc.mutation.InviteCode(); !ok {
+		return &ValidationError{Name: "invite_code", err: errors.New(`ent: missing required field "Pod.invite_code"`)}
+	}
 	return nil
 }
 
@@ -163,6 +188,10 @@ func (pc *PodCreate) createSpec() (*Pod, *sqlgraph.CreateSpec) {
 		_spec.SetField(pod.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
+	if value, ok := pc.mutation.InviteCode(); ok {
+		_spec.SetField(pod.FieldInviteCode, field.TypeString, value)
+		_node.InviteCode = value
+	}
 	if nodes := pc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -189,6 +218,22 @@ func (pc *PodCreate) createSpec() (*Pod, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.BeansIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

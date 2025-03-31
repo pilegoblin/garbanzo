@@ -16,6 +16,8 @@ const (
 	FieldName = "name"
 	// EdgePosts holds the string denoting the posts edge name in mutations.
 	EdgePosts = "posts"
+	// EdgePod holds the string denoting the pod edge name in mutations.
+	EdgePod = "pod"
 	// Table holds the table name of the bean in the database.
 	Table = "beans"
 	// PostsTable is the table that holds the posts relation/edge.
@@ -25,6 +27,13 @@ const (
 	PostsInverseTable = "posts"
 	// PostsColumn is the table column denoting the posts relation/edge.
 	PostsColumn = "bean_posts"
+	// PodTable is the table that holds the pod relation/edge.
+	PodTable = "beans"
+	// PodInverseTable is the table name for the Pod entity.
+	// It exists in this package in order to avoid circular dependency with the "pod" package.
+	PodInverseTable = "pods"
+	// PodColumn is the table column denoting the pod relation/edge.
+	PodColumn = "pod_beans"
 )
 
 // Columns holds all SQL columns for bean fields.
@@ -33,10 +42,21 @@ var Columns = []string{
 	FieldName,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "beans"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"pod_beans",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -74,10 +94,24 @@ func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPodField orders the results by pod field.
+func ByPodField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPodStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newPostsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PostsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
+	)
+}
+func newPodStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PodInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PodTable, PodColumn),
 	)
 }

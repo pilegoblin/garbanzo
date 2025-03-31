@@ -12,18 +12,28 @@ var (
 	BeansColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
+		{Name: "pod_beans", Type: field.TypeInt, Nullable: true},
 	}
 	// BeansTable holds the schema information for the "beans" table.
 	BeansTable = &schema.Table{
 		Name:       "beans",
 		Columns:    BeansColumns,
 		PrimaryKey: []*schema.Column{BeansColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "beans_pods_beans",
+				Columns:    []*schema.Column{BeansColumns[2]},
+				RefColumns: []*schema.Column{PodsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// PodsColumns holds the columns for the "pods" table.
 	PodsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "pod_name", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "invite_code", Type: field.TypeString, Unique: true},
 		{Name: "user_owned_pods", Type: field.TypeInt, Nullable: true},
 	}
 	// PodsTable holds the schema information for the "pods" table.
@@ -34,7 +44,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "pods_users_owned_pods",
-				Columns:    []*schema.Column{PodsColumns[3]},
+				Columns:    []*schema.Column{PodsColumns[4]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -119,6 +129,7 @@ var (
 )
 
 func init() {
+	BeansTable.ForeignKeys[0].RefTable = PodsTable
 	PodsTable.ForeignKeys[0].RefTable = UsersTable
 	PostsTable.ForeignKeys[0].RefTable = BeansTable
 	PostsTable.ForeignKeys[1].RefTable = UsersTable

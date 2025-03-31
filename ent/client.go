@@ -351,6 +351,22 @@ func (c *BeanClient) QueryPosts(b *Bean) *PostQuery {
 	return query
 }
 
+// QueryPod queries the pod edge of a Bean.
+func (c *BeanClient) QueryPod(b *Bean) *PodQuery {
+	query := (&PodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := b.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bean.Table, bean.FieldID, id),
+			sqlgraph.To(pod.Table, pod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, bean.PodTable, bean.PodColumn),
+		)
+		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *BeanClient) Hooks() []Hook {
 	return c.hooks.Bean
@@ -509,6 +525,22 @@ func (c *PodClient) QueryUsers(po *Pod) *UserQuery {
 			sqlgraph.From(pod.Table, pod.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, pod.UsersTable, pod.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBeans queries the beans edge of a Pod.
+func (c *PodClient) QueryBeans(po *Pod) *BeanQuery {
+	query := (&BeanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := po.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(pod.Table, pod.FieldID, id),
+			sqlgraph.To(bean.Table, bean.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, pod.BeansTable, pod.BeansColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil

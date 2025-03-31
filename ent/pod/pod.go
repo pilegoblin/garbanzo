@@ -18,10 +18,14 @@ const (
 	FieldPodName = "pod_name"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
+	// FieldInviteCode holds the string denoting the invite_code field in the database.
+	FieldInviteCode = "invite_code"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
+	// EdgeBeans holds the string denoting the beans edge name in mutations.
+	EdgeBeans = "beans"
 	// Table holds the table name of the pod in the database.
 	Table = "pods"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -36,6 +40,13 @@ const (
 	// UsersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UsersInverseTable = "users"
+	// BeansTable is the table that holds the beans relation/edge.
+	BeansTable = "beans"
+	// BeansInverseTable is the table name for the Bean entity.
+	// It exists in this package in order to avoid circular dependency with the "bean" package.
+	BeansInverseTable = "beans"
+	// BeansColumn is the table column denoting the beans relation/edge.
+	BeansColumn = "pod_beans"
 )
 
 // Columns holds all SQL columns for pod fields.
@@ -43,6 +54,7 @@ var Columns = []string{
 	FieldID,
 	FieldPodName,
 	FieldCreatedAt,
+	FieldInviteCode,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "pods"
@@ -97,6 +109,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
+// ByInviteCode orders the results by the invite_code field.
+func ByInviteCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInviteCode, opts...).ToFunc()
+}
+
 // ByOwnerField orders the results by owner field.
 func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -117,6 +134,20 @@ func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByBeansCount orders the results by beans count.
+func ByBeansCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBeansStep(), opts...)
+	}
+}
+
+// ByBeans orders the results by beans terms.
+func ByBeans(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBeansStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -129,5 +160,12 @@ func newUsersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, UsersTable, UsersPrimaryKey...),
+	)
+}
+func newBeansStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BeansInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BeansTable, BeansColumn),
 	)
 }

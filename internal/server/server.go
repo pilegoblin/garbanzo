@@ -44,8 +44,6 @@ func (s *Server) Run() {
 		r.Use(middleware.Logger)
 		r.Use(chimiddleware.Recoverer)
 
-		// index route
-
 		// auth routes
 		r.Get("/login", handlers.LoginViewHandler)
 		r.Get("/auth", handlers.AuthHandler)
@@ -55,11 +53,12 @@ func (s *Server) Run() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthIDMiddleware)
 			r.Get("/", s.handler.IndexViewHandler)
-			// user routes
 			r.Get("/user/new", handlers.NewUserViewHandler)
 			r.Post("/user/new", s.handler.NewUserHandler)
+			r.Post("/pod/join", s.handler.JoinPodHandler)
+			r.Get("/pod/{podID}", s.handler.PodViewHandler)
+			r.Post("/{podID}/{beanID}/post", s.handler.CreatePost)
 		})
-
 	})
 
 	slog.Info("Starting server on port " + s.port)

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/pilegoblin/garbanzo/ent/bean"
 	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/predicate"
 	"github.com/pilegoblin/garbanzo/ent/user"
@@ -26,6 +27,7 @@ type PodQuery struct {
 	predicates []predicate.Pod
 	withOwner  *UserQuery
 	withUsers  *UserQuery
+	withBeans  *BeanQuery
 	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -100,6 +102,28 @@ func (pq *PodQuery) QueryUsers() *UserQuery {
 			sqlgraph.From(pod.Table, pod.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, pod.UsersTable, pod.UsersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBeans chains the current query on the "beans" edge.
+func (pq *PodQuery) QueryBeans() *BeanQuery {
+	query := (&BeanClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(pod.Table, pod.FieldID, selector),
+			sqlgraph.To(bean.Table, bean.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, pod.BeansTable, pod.BeansColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,6 +325,7 @@ func (pq *PodQuery) Clone() *PodQuery {
 		predicates: append([]predicate.Pod{}, pq.predicates...),
 		withOwner:  pq.withOwner.Clone(),
 		withUsers:  pq.withUsers.Clone(),
+		withBeans:  pq.withBeans.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -326,6 +351,17 @@ func (pq *PodQuery) WithUsers(opts ...func(*UserQuery)) *PodQuery {
 		opt(query)
 	}
 	pq.withUsers = query
+	return pq
+}
+
+// WithBeans tells the query-builder to eager-load the nodes that are connected to
+// the "beans" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PodQuery) WithBeans(opts ...func(*BeanQuery)) *PodQuery {
+	query := (&BeanClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withBeans = query
 	return pq
 }
 
@@ -408,9 +444,10 @@ func (pq *PodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pod, err
 		nodes       = []*Pod{}
 		withFKs     = pq.withFKs
 		_spec       = pq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			pq.withOwner != nil,
 			pq.withUsers != nil,
+			pq.withBeans != nil,
 		}
 	)
 	if pq.withOwner != nil {
@@ -447,6 +484,13 @@ func (pq *PodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pod, err
 		if err := pq.loadUsers(ctx, query, nodes,
 			func(n *Pod) { n.Edges.Users = []*User{} },
 			func(n *Pod, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withBeans; query != nil {
+		if err := pq.loadBeans(ctx, query, nodes,
+			func(n *Pod) { n.Edges.Beans = []*Bean{} },
+			func(n *Pod, e *Bean) { n.Edges.Beans = append(n.Edges.Beans, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -543,6 +587,37 @@ func (pq *PodQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Po
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (pq *PodQuery) loadBeans(ctx context.Context, query *BeanQuery, nodes []*Pod, init func(*Pod), assign func(*Pod, *Bean)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Pod)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Bean(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(pod.BeansColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.pod_beans
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "pod_beans" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "pod_beans" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

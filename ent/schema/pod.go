@@ -20,6 +20,8 @@ func (Pod) Fields() []ent.Field {
 			NotEmpty(),
 		field.Time("created_at").
 			Default(time.Now),
+		field.String("invite_code").
+			Unique(),
 	}
 }
 
@@ -30,5 +32,6 @@ func (Pod) Edges() []ent.Edge {
 			Ref("owned_pods").
 			Unique(),
 		edge.To("users", User.Type),
+		edge.To("beans", Bean.Type),
 	}
 }

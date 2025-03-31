@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/pilegoblin/garbanzo/ent/bean"
 	"github.com/pilegoblin/garbanzo/ent/pod"
 	"github.com/pilegoblin/garbanzo/ent/predicate"
 	"github.com/pilegoblin/garbanzo/ent/user"
@@ -57,6 +58,20 @@ func (pu *PodUpdate) SetNillableCreatedAt(t *time.Time) *PodUpdate {
 	return pu
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (pu *PodUpdate) SetInviteCode(s string) *PodUpdate {
+	pu.mutation.SetInviteCode(s)
+	return pu
+}
+
+// SetNillableInviteCode sets the "invite_code" field if the given value is not nil.
+func (pu *PodUpdate) SetNillableInviteCode(s *string) *PodUpdate {
+	if s != nil {
+		pu.SetInviteCode(*s)
+	}
+	return pu
+}
+
 // SetOwnerID sets the "owner" edge to the User entity by ID.
 func (pu *PodUpdate) SetOwnerID(id int) *PodUpdate {
 	pu.mutation.SetOwnerID(id)
@@ -91,6 +106,21 @@ func (pu *PodUpdate) AddUsers(u ...*User) *PodUpdate {
 	return pu.AddUserIDs(ids...)
 }
 
+// AddBeanIDs adds the "beans" edge to the Bean entity by IDs.
+func (pu *PodUpdate) AddBeanIDs(ids ...int) *PodUpdate {
+	pu.mutation.AddBeanIDs(ids...)
+	return pu
+}
+
+// AddBeans adds the "beans" edges to the Bean entity.
+func (pu *PodUpdate) AddBeans(b ...*Bean) *PodUpdate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return pu.AddBeanIDs(ids...)
+}
+
 // Mutation returns the PodMutation object of the builder.
 func (pu *PodUpdate) Mutation() *PodMutation {
 	return pu.mutation
@@ -121,6 +151,27 @@ func (pu *PodUpdate) RemoveUsers(u ...*User) *PodUpdate {
 		ids[i] = u[i].ID
 	}
 	return pu.RemoveUserIDs(ids...)
+}
+
+// ClearBeans clears all "beans" edges to the Bean entity.
+func (pu *PodUpdate) ClearBeans() *PodUpdate {
+	pu.mutation.ClearBeans()
+	return pu
+}
+
+// RemoveBeanIDs removes the "beans" edge to Bean entities by IDs.
+func (pu *PodUpdate) RemoveBeanIDs(ids ...int) *PodUpdate {
+	pu.mutation.RemoveBeanIDs(ids...)
+	return pu
+}
+
+// RemoveBeans removes "beans" edges to Bean entities.
+func (pu *PodUpdate) RemoveBeans(b ...*Bean) *PodUpdate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return pu.RemoveBeanIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -177,6 +228,9 @@ func (pu *PodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.CreatedAt(); ok {
 		_spec.SetField(pod.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := pu.mutation.InviteCode(); ok {
+		_spec.SetField(pod.FieldInviteCode, field.TypeString, value)
 	}
 	if pu.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -252,6 +306,51 @@ func (pu *PodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if pu.mutation.BeansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedBeansIDs(); len(nodes) > 0 && !pu.mutation.BeansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.BeansIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{pod.Label}
@@ -300,6 +399,20 @@ func (puo *PodUpdateOne) SetNillableCreatedAt(t *time.Time) *PodUpdateOne {
 	return puo
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (puo *PodUpdateOne) SetInviteCode(s string) *PodUpdateOne {
+	puo.mutation.SetInviteCode(s)
+	return puo
+}
+
+// SetNillableInviteCode sets the "invite_code" field if the given value is not nil.
+func (puo *PodUpdateOne) SetNillableInviteCode(s *string) *PodUpdateOne {
+	if s != nil {
+		puo.SetInviteCode(*s)
+	}
+	return puo
+}
+
 // SetOwnerID sets the "owner" edge to the User entity by ID.
 func (puo *PodUpdateOne) SetOwnerID(id int) *PodUpdateOne {
 	puo.mutation.SetOwnerID(id)
@@ -334,6 +447,21 @@ func (puo *PodUpdateOne) AddUsers(u ...*User) *PodUpdateOne {
 	return puo.AddUserIDs(ids...)
 }
 
+// AddBeanIDs adds the "beans" edge to the Bean entity by IDs.
+func (puo *PodUpdateOne) AddBeanIDs(ids ...int) *PodUpdateOne {
+	puo.mutation.AddBeanIDs(ids...)
+	return puo
+}
+
+// AddBeans adds the "beans" edges to the Bean entity.
+func (puo *PodUpdateOne) AddBeans(b ...*Bean) *PodUpdateOne {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return puo.AddBeanIDs(ids...)
+}
+
 // Mutation returns the PodMutation object of the builder.
 func (puo *PodUpdateOne) Mutation() *PodMutation {
 	return puo.mutation
@@ -364,6 +492,27 @@ func (puo *PodUpdateOne) RemoveUsers(u ...*User) *PodUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return puo.RemoveUserIDs(ids...)
+}
+
+// ClearBeans clears all "beans" edges to the Bean entity.
+func (puo *PodUpdateOne) ClearBeans() *PodUpdateOne {
+	puo.mutation.ClearBeans()
+	return puo
+}
+
+// RemoveBeanIDs removes the "beans" edge to Bean entities by IDs.
+func (puo *PodUpdateOne) RemoveBeanIDs(ids ...int) *PodUpdateOne {
+	puo.mutation.RemoveBeanIDs(ids...)
+	return puo
+}
+
+// RemoveBeans removes "beans" edges to Bean entities.
+func (puo *PodUpdateOne) RemoveBeans(b ...*Bean) *PodUpdateOne {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return puo.RemoveBeanIDs(ids...)
 }
 
 // Where appends a list predicates to the PodUpdate builder.
@@ -451,6 +600,9 @@ func (puo *PodUpdateOne) sqlSave(ctx context.Context) (_node *Pod, err error) {
 	if value, ok := puo.mutation.CreatedAt(); ok {
 		_spec.SetField(pod.FieldCreatedAt, field.TypeTime, value)
 	}
+	if value, ok := puo.mutation.InviteCode(); ok {
+		_spec.SetField(pod.FieldInviteCode, field.TypeString, value)
+	}
 	if puo.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -518,6 +670,51 @@ func (puo *PodUpdateOne) sqlSave(ctx context.Context) (_node *Pod, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.BeansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedBeansIDs(); len(nodes) > 0 && !puo.mutation.BeansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.BeansIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   pod.BeansTable,
+			Columns: []string{pod.BeansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bean.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

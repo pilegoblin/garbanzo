@@ -146,6 +146,29 @@ func HasPostsWith(preds ...predicate.Post) predicate.Bean {
 	})
 }
 
+// HasPod applies the HasEdge predicate on the "pod" edge.
+func HasPod() predicate.Bean {
+	return predicate.Bean(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, PodTable, PodColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPodWith applies the HasEdge predicate on the "pod" edge with a given conditions (other predicates).
+func HasPodWith(preds ...predicate.Pod) predicate.Bean {
+	return predicate.Bean(func(s *sql.Selector) {
+		step := newPodStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Bean) predicate.Bean {
 	return predicate.Bean(sql.AndPredicates(predicates...))

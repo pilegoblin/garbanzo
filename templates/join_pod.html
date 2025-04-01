@@ -6,8 +6,7 @@
             <p class="text-stone-300">Join a pod to start chatting</p>
         </div>
         <div class="flex justify-center mb-6">
-            <form hx-post="/pod/join" hx-swap="outerHTML"
-                hx-on::after-request="if(event.detail.successful) this.reset()">
+            <form hx-post="/pod/join" hx-on::after-request=" if(event.detail.successful) this.reset()">
                 <div class="bg-stone-700 rounded-lg p-1">
                     <div class="flex items-center px-2">
                         <div class="flex-1">

@@ -1,7 +1,8 @@
+{{define "post"}}
 <div class="flex group">
     <div class="mr-4 flex-shrink-0">
         <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-            <span class="font-bold text-sm">{{.Edges.User.Username}}</span>
+            <span class="font-bold text-sm">{{firstLetter .Edges.User.Username}}</span>
         </div>
     </div>
     <div class="flex-1">
@@ -14,3 +15,6 @@
         </div>
     </div>
 </div>
+{{end}}
+
+{{template "post" .}}

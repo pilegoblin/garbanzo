@@ -114,14 +114,6 @@ func NewUserViewHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, nil, "new_user.html")
 }
 
-// GET /{podID}/{beanID}
-func BeanViewHandler(w http.ResponseWriter, r *http.Request) {
-	// podID := chi.URLParam(r, "podID")
-	// beanID := chi.URLParam(r, "beanID")
-
-	renderTemplate(w, nil, "bean.html")
-}
-
 // POST /{podID}/{beanID}/post
 func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 	content := r.FormValue("content")
@@ -183,5 +175,5 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderTemplate(w, beans[0], "bean.html")
+	renderTemplate(w, beans[0], "bean.html", "post.html")
 }

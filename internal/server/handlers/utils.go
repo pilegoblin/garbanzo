@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"text/template"
 
 	"github.com/pilegoblin/garbanzo/internal/database"
@@ -22,21 +23,41 @@ func redirect(w http.ResponseWriter, path string) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+func renderTemplateRaw(w http.ResponseWriter, data any, file string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	t := template.New("templates")
+	t.Funcs(template.FuncMap{
+		"firstLetter": firstLetter,
+	})
+	t, err := t.ParseFiles("templates/" + file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	t.ExecuteTemplate(w, file, data)
+}
+
 func renderTemplate(w http.ResponseWriter, data any, files ...string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	files = append([]string{"base.html"}, files...)
 	for i, file := range files {
 		files[i] = "templates/" + file
 	}
-	tmpl := template.Must(template.ParseFiles(files...))
-	tmpl.Execute(w, data)
+	t := template.New("templates")
+	t.Funcs(template.FuncMap{
+		"firstLetter": firstLetter,
+	})
+	tmpl, err := t.ParseFiles(files...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "base.html", data)
 }
 
-func renderTemplateRaw(w http.ResponseWriter, data any, files ...string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	for i, file := range files {
-		files[i] = "templates/" + file
+func firstLetter(s string) string {
+	if len(s) == 0 {
+		return ""
 	}
-	tmpl := template.Must(template.ParseFiles(files...))
-	tmpl.Execute(w, data)
+	return strings.ToUpper(string(s[0]))
 }

@@ -17,7 +17,6 @@ type Server struct {
 	Router  *chi.Mux
 	port    string
 	handler *handlers.HandlerEnv
-	// Db, config can be added here
 }
 
 func New(config *config.Config) *Server {

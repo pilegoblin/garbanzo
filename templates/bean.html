@@ -1,9 +1,10 @@
-{{define "title"}}Garbanzo{{end}}
+
 {{define "header"}}{{.Edges.Pod.PodName}}{{end}}
 {{define "content"}}
 
 
 <!-- Messages -->
+<title>{{.Edges.Pod.PodName}} - Chat</title>
 <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-800" hx-swap-oob="true" id="posts"
     style="overflow-anchor: none;">
     <!-- Welcome message -->

@@ -12,6 +12,10 @@ import (
 	"github.com/pilegoblin/garbanzo/internal/config"
 )
 
+const (
+	SessionName = "gbzo-session"
+)
+
 var store *sessions.CookieStore
 var authOnce sync.Once
 
@@ -51,7 +55,7 @@ func GetSession(r *http.Request) (*sessions.Session, error) {
 	if store == nil {
 		return nil, errors.New("store not initialized")
 	}
-	session, err := store.Get(r, "gbzo-session")
+	session, err := store.Get(r, SessionName)
 	if err != nil {
 		return nil, err
 	}

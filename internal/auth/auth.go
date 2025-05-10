@@ -32,16 +32,12 @@ func setup(config *config.Config) {
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
 
-	isProd := false
-	if environment == "prod" {
-		isProd = true
-	}
 	maxAge := 86400 * 30 // 30 days
 
 	store.MaxAge(maxAge)
 	store.Options.Path = "/"
 	store.Options.HttpOnly = true // HttpOnly should always be enabled
-	store.Options.Secure = isProd
+	store.Options.Secure = environment == "prod"
 
 	gothic.Store = store
 	goth.UseProviders(

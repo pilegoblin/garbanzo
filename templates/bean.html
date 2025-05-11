@@ -1,8 +1,5 @@
-
 {{define "header"}}{{.Edges.Pod.PodName}}{{end}}
 {{define "content"}}
-
-
 <!-- Messages -->
 <title>{{.Edges.Pod.PodName}} - Chat</title>
 <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-800" hx-swap-oob="true" id="posts"
@@ -20,11 +17,9 @@
     </div>
 
     <!-- Message -->
-
     {{range .Edges.Posts}}
     {{template "post" .}}
     {{end}}
-
 </div>
 <!-- Message input -->
 <form hx-post="/{{.Edges.Pod.ID}}/{{.ID}}/post" hx-swap="beforeend scroll:bottom"

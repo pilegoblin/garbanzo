@@ -34,16 +34,16 @@ func (h *HandlerEnv) IndexViewHandler(w http.ResponseWriter, r *http.Request) {
 	pods := user.Edges.JoinedPods
 
 	if len(pods) == 0 {
-		renderTemplate(w, nil, "join_pod.html")
+		h.pc.Render(w, "join_pod.html", nil)
 		return
 	}
 
-	renderTemplate(w, pods, "index.html")
+	h.pc.Render(w, "pods.html", pods)
 }
 
 // GET /login
-func LoginViewHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, nil, "login.html")
+func (h *HandlerEnv) LoginViewHandler(w http.ResponseWriter, r *http.Request) {
+	h.pc.Render(w, "login.html", nil)
 }
 
 // GET /logout
@@ -110,8 +110,8 @@ func (h *HandlerEnv) NewUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /user/new
-func NewUserViewHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, nil, "new_user.html")
+func (h *HandlerEnv) NewUserViewHandler(w http.ResponseWriter, r *http.Request) {
+	h.pc.Render(w, "new_user.html", nil)
 }
 
 // POST /{podID}/{beanID}/post
@@ -135,7 +135,7 @@ func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderTemplateRaw(w, p, "post.html")
+	h.pc.RenderFragment(w, "post.html", p)
 }
 
 // POST /pod/join
@@ -175,5 +175,5 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderTemplate(w, beans[0], "bean.html", "post.html")
+	h.pc.Render(w, "bean.html", beans[0])
 }

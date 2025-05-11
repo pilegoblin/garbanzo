@@ -44,7 +44,7 @@ func (s *Server) Run() {
 		r.Use(chimiddleware.Recoverer)
 
 		// auth routes
-		r.Get("/login", handlers.LoginViewHandler)
+		r.Get("/login", s.handler.LoginViewHandler)
 		r.Get("/auth", handlers.AuthHandler)
 		r.Get("/auth/callback", handlers.CallbackHandler)
 		r.Get("/logout", handlers.LogoutHandler)
@@ -52,7 +52,7 @@ func (s *Server) Run() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthIDMiddleware)
 			r.Get("/", s.handler.IndexViewHandler)
-			r.Get("/user/new", handlers.NewUserViewHandler)
+			r.Get("/user/new", s.handler.NewUserViewHandler)
 			r.Post("/user/new", s.handler.NewUserHandler)
 			r.Post("/pod/join", s.handler.JoinPodHandler)
 			r.Get("/pod/{podID}", s.handler.PodViewHandler)

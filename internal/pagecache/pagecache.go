@@ -70,7 +70,7 @@ func NewPageCache() *PageCache {
 	}
 
 	// Then add fragments to the cache
-	// Fragments are meant to be rendered by themselves
+	// Fragments are meant to be rendered by themselves or in a page
 	fragments, err := fs.Glob(os.DirFS(FragmentsDir), "*.html")
 	if err != nil {
 		slog.Error("failed to get fragments", "error", err)

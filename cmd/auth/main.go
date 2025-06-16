@@ -1,5 +1,3 @@
-// This application will be the RESTful endpoint responsible for providing and verifying auth to users
-
 package main
 
 import (

@@ -1,7 +1,6 @@
 package pagecache
 
 import (
-	"fmt"
 	"html/template"
 	"io/fs"
 	"log/slog"
@@ -43,7 +42,6 @@ func NewPageCache() *PageCache {
 		slog.Error("failed to get pages", "error", err)
 		os.Exit(1)
 	}
-	fmt.Printf("pages: %v\n", pages)
 
 	for _, page := range pages {
 		name := filepath.Base(page)

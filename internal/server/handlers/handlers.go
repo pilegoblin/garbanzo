@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/markbates/goth/gothic"
+	"github.com/pilegoblin/garbanzo/db/sqlc"
 	gbzocontext "github.com/pilegoblin/garbanzo/internal/context"
 	"github.com/pilegoblin/garbanzo/internal/session"
 )
@@ -20,18 +22,15 @@ func (h *HandlerEnv) IndexViewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.db.GetUserByAuthID(r.Context(), authID)
+	user, err := h.query.GetUserByAuthID(r.Context(), authID)
 	if err != nil {
 		redirect(w, "/user/new")
 		return
 	}
 
-	_, err = session.GetUserID(r)
-	if err != nil {
-		session.SetUserID(w, r, user.ID)
-	}
+	session.SetUserID(w, r, user.ID)
 
-	pods := user.Edges.JoinedPods
+	pods, err := h.query.ListPodsForUser(r.Context(), user.ID)
 
 	if len(pods) == 0 {
 		h.pc.Render(w, "join_pod.html", nil)
@@ -99,7 +98,12 @@ func (h *HandlerEnv) NewUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.db.CreateUser(r.Context(), authID, username, email)
+	user, err := h.query.CreateUser(r.Context(), sqlc.CreateUserParams{
+		Username: username,
+		AuthID:   authID,
+		Email:    email,
+	})
+
 	if err != nil {
 		slog.Error("failed to create user", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -118,7 +122,7 @@ func (h *HandlerEnv) NewUserViewHandler(w http.ResponseWriter, r *http.Request) 
 func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 	content := r.FormValue("content")
 
-	beanID, err := strconv.Atoi(chi.URLParam(r, "beanID"))
+	beanID, err := strconv.ParseInt(chi.URLParam(r, "beanID"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -129,7 +133,12 @@ func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p, err := h.db.CreatePost(r.Context(), userID, beanID, content)
+	//p, err := h.db.CreatePost(r.Context(), userID, beanID, content)
+	p, err := h.query.CreateMessage(r.Context(), sqlc.CreateMessageParams{
+		BeanID:   beanID,
+		AuthorID: userID,
+		Content:  content,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -147,7 +156,13 @@ func (h *HandlerEnv) JoinPodHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.db.JoinPod(r.Context(), userID, inviteCode)
+	pod, err := h.query.GetPodByInviteCode(r.Context(), pgtype.Text{String: inviteCode, Valid: true})
+
+	//_, err = h.db.JoinPod(r.Context(), userID, inviteCode)
+	_, err = h.query.AddPodMember(r.Context(), sqlc.AddPodMemberParams{
+		UserID: userID,
+		PodID:  pod.ID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -159,7 +174,7 @@ func (h *HandlerEnv) JoinPodHandler(w http.ResponseWriter, r *http.Request) {
 // GET /pod/{podID}
 func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 	podID := chi.URLParam(r, "podID")
-	podIDInt, err := strconv.Atoi(podID)
+	podIDInt, err := strconv.ParseInt(podID, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -169,7 +184,18 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		redirect(w, "/login")
 		return
 	}
-	beans, err := h.db.GetBeans(r.Context(), userID, podIDInt)
+
+	check, err := h.query.CheckUserInPod(r.Context(), sqlc.CheckUserInPodParams{
+		UserID: userID,
+		PodID:  podIDInt,
+	})
+
+	if !check || err != nil {
+		redirect(w, "/")
+		return
+	}
+
+	beans, err := h.query.ListBeansForPod(r.Context(), podIDInt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

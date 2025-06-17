@@ -8,4 +8,4 @@ run: build gen
 
 .PHONY: gen
 gen:
-	@go generate ./ent
+	rm -rf ./db/sqlc && sqlc generate

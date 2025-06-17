@@ -47,7 +47,7 @@ func GetAuthID(r *http.Request) (string, error) {
 	return authID, nil
 }
 
-func SetUserID(w http.ResponseWriter, r *http.Request, userID int) error {
+func SetUserID(w http.ResponseWriter, r *http.Request, userID int64) error {
 	session, err := GetSession(r)
 	if err != nil {
 		return err
@@ -56,12 +56,12 @@ func SetUserID(w http.ResponseWriter, r *http.Request, userID int) error {
 	return session.Save(r, w)
 }
 
-func GetUserID(r *http.Request) (int, error) {
+func GetUserID(r *http.Request) (int64, error) {
 	session, err := GetSession(r)
 	if err != nil {
 		return 0, err
 	}
-	userID, ok := session.Values["userID"].(int)
+	userID, ok := session.Values["userID"].(int64)
 	if !ok {
 		return 0, errors.New("userID not found in session")
 	}

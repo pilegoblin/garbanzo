@@ -3,19 +3,19 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/pilegoblin/garbanzo/internal/database"
+	"github.com/pilegoblin/garbanzo/db/sqlc"
 	"github.com/pilegoblin/garbanzo/internal/pagecache"
 )
 
 type HandlerEnv struct {
-	db *database.Database
-	pc *pagecache.PageCache
+	query *sqlc.Queries
+	pc    *pagecache.PageCache
 }
 
-func NewHandlerEnv(db *database.Database) *HandlerEnv {
+func NewHandlerEnv(queries *sqlc.Queries) *HandlerEnv {
 	return &HandlerEnv{
-		db: db,
-		pc: pagecache.NewPageCache(),
+		query: queries,
+		pc:    pagecache.NewPageCache(),
 	}
 }
 

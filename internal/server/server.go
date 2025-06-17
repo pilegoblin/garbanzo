@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pilegoblin/garbanzo/internal/config"
 	"github.com/pilegoblin/garbanzo/internal/database"
 	"github.com/pilegoblin/garbanzo/internal/server/handlers"
@@ -15,16 +16,19 @@ import (
 
 type Server struct {
 	Router  *chi.Mux
+	DB      *pgxpool.Pool
 	port    string
 	handler *handlers.HandlerEnv
 }
 
 func New(config *config.Config) *Server {
-	db := database.New(&config.Database)
+	db := database.NewDatabase(&config.Database)
+	q := database.NewQueries(db)
 	return &Server{
 		Router:  chi.NewRouter(),
+		DB:      db,
 		port:    config.Server.Port,
-		handler: handlers.NewHandlerEnv(db),
+		handler: handlers.NewHandlerEnv(q),
 	}
 }
 

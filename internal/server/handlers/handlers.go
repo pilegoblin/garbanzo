@@ -31,6 +31,11 @@ func (h *HandlerEnv) IndexViewHandler(w http.ResponseWriter, r *http.Request) {
 	session.SetUserID(w, r, user.ID)
 
 	pods, err := h.query.ListPodsForUser(r.Context(), user.ID)
+	if err != nil {
+		slog.Error("failed to get pods for user", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	if len(pods) == 0 {
 		h.pc.Render(w, "join_pod.html", nil)

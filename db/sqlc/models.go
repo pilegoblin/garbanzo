@@ -5,45 +5,47 @@
 package sqlc
 
 import (
+	"time"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Bean struct {
-	ID        int64              `json:"id"`
-	PodID     int64              `json:"pod_id"`
-	Name      string             `json:"name"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID        int64     `json:"id"`
+	PodID     int64     `json:"pod_id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Message struct {
-	ID        int64              `json:"id"`
-	BeanID    int64              `json:"bean_id"`
-	AuthorID  int64              `json:"author_id"`
-	Content   string             `json:"content"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID        int64      `json:"id"`
+	BeanID    int64      `json:"bean_id"`
+	AuthorID  int64      `json:"author_id"`
+	Content   string     `json:"content"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type Pod struct {
-	ID         int64              `json:"id"`
-	OwnerID    int64              `json:"owner_id"`
-	Name       string             `json:"name"`
-	InviteCode pgtype.Text        `json:"invite_code"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID         int64       `json:"id"`
+	OwnerID    int64       `json:"owner_id"`
+	Name       string      `json:"name"`
+	InviteCode pgtype.Text `json:"invite_code"`
+	CreatedAt  time.Time   `json:"created_at"`
 }
 
 type PodMember struct {
-	ID       int64              `json:"id"`
-	UserID   int64              `json:"user_id"`
-	PodID    int64              `json:"pod_id"`
-	JoinedAt pgtype.Timestamptz `json:"joined_at"`
+	ID       int64     `json:"id"`
+	UserID   int64     `json:"user_id"`
+	PodID    int64     `json:"pod_id"`
+	JoinedAt time.Time `json:"joined_at"`
 }
 
 type User struct {
-	ID        int64              `json:"id"`
-	Username  string             `json:"username"`
-	Email     string             `json:"email"`
-	AuthID    string             `json:"auth_id"`
-	AvatarUrl pgtype.Text        `json:"avatar_url"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID        int64       `json:"id"`
+	Username  string      `json:"username"`
+	Email     string      `json:"email"`
+	AuthID    string      `json:"auth_id"`
+	AvatarUrl pgtype.Text `json:"avatar_url"`
+	CreatedAt time.Time   `json:"created_at"`
 }

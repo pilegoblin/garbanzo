@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -133,7 +134,6 @@ func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//p, err := h.db.CreatePost(r.Context(), userID, beanID, content)
 	p, err := h.query.CreateMessage(r.Context(), sqlc.CreateMessageParams{
 		BeanID:   beanID,
 		AuthorID: userID,
@@ -195,11 +195,38 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	beans, err := h.query.ListBeansForPod(r.Context(), podIDInt)
+	beans, err := h.query.ListBeansForPodFull(r.Context(), podIDInt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.pc.Render(w, "bean.html", beans[0])
+	var result []BeanWithMessages
+
+	// Doing some shenanigans because the sql query returns json for messages
+	for _, bean := range beans {
+		var messages []FullMessage
+		bytes, err := json.Marshal(bean.Messages)
+		if err != nil {
+			slog.Error("failed to marshal messages", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = json.Unmarshal(bytes, &messages)
+		if err != nil {
+			slog.Error("failed to unmarshal messages", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		result = append(result, BeanWithMessages{
+			ID:       bean.ID,
+			Name:     bean.Name,
+			PodID:    bean.PodID,
+			PodName:  bean.PodName,
+			Messages: messages,
+		})
+
+	}
+
+	h.pc.Render(w, "bean.html", result[0])
 }

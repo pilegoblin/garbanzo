@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -88,13 +89,21 @@ func (q *Queries) CreateBean(ctx context.Context, arg CreateBeanParams) (Bean, e
 
 const createMessage = `-- name: CreateMessage :one
 
-INSERT INTO messages (
-  bean_id,
-  author_id,
-  content
-) VALUES (
-  $1, $2, $3
-) RETURNING id, bean_id, author_id, content, created_at, updated_at
+WITH new_message AS (
+  INSERT INTO messages (
+    bean_id,
+    author_id,
+    content
+  ) VALUES (
+    $1, $2, $3
+  ) RETURNING id, bean_id, author_id, content, created_at, updated_at
+)
+SELECT
+  m.id, m.bean_id, m.author_id, m.content, m.created_at, m.updated_at,
+  u.username as author_username,
+  u.avatar_url as author_avatar_url
+FROM new_message m
+JOIN users u ON m.author_id = u.id
 `
 
 type CreateMessageParams struct {
@@ -103,10 +112,21 @@ type CreateMessageParams struct {
 	Content  string `json:"content"`
 }
 
+type CreateMessageRow struct {
+	ID              int64       `json:"id"`
+	BeanID          int64       `json:"bean_id"`
+	AuthorID        int64       `json:"author_id"`
+	Content         string      `json:"content"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       *time.Time  `json:"updated_at"`
+	AuthorUsername  string      `json:"author_username"`
+	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
+}
+
 // Message Queries
-func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
+func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (CreateMessageRow, error) {
 	row := q.db.QueryRow(ctx, createMessage, arg.BeanID, arg.AuthorID, arg.Content)
-	var i Message
+	var i CreateMessageRow
 	err := row.Scan(
 		&i.ID,
 		&i.BeanID,
@@ -114,6 +134,8 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		&i.Content,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AuthorUsername,
+		&i.AuthorAvatarUrl,
 	)
 	return i, err
 }
@@ -410,6 +432,65 @@ func (q *Queries) ListBeansForPod(ctx context.Context, podID int64) ([]Bean, err
 	return items, nil
 }
 
+const listBeansForPodFull = `-- name: ListBeansForPodFull :many
+SELECT
+    b.id,
+    b.name,
+    p.id as pod_id,
+    p.name as pod_name,
+    COALESCE(jsonb_agg(
+        json_build_object(
+            'id', m.id,
+            'content', m.content,
+            'created_at', m.created_at,
+            'author_id', u.id,
+            'author_username', u.username,
+            'author_avatar_url', u.avatar_url
+        ) ORDER BY m.created_at ASC
+    ) FILTER (WHERE m.id IS NOT NULL), '[]'::jsonb) as messages
+FROM beans b
+JOIN pods p ON b.pod_id = p.id
+LEFT JOIN messages m ON m.bean_id = b.id
+LEFT JOIN users u ON m.author_id = u.id
+WHERE b.pod_id = $1
+GROUP BY b.id, p.id, p.name
+ORDER BY b.name
+`
+
+type ListBeansForPodFullRow struct {
+	ID       int64       `json:"id"`
+	Name     string      `json:"name"`
+	PodID    int64       `json:"pod_id"`
+	PodName  string      `json:"pod_name"`
+	Messages interface{} `json:"messages"`
+}
+
+func (q *Queries) ListBeansForPodFull(ctx context.Context, podID int64) ([]ListBeansForPodFullRow, error) {
+	rows, err := q.db.Query(ctx, listBeansForPodFull, podID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListBeansForPodFullRow{}
+	for rows.Next() {
+		var i ListBeansForPodFullRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.PodID,
+			&i.PodName,
+			&i.Messages,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMessagesInBean = `-- name: ListMessagesInBean :many
 SELECT m.id, m.bean_id, m.author_id, m.content, m.created_at, m.updated_at, u.username as author_username, u.avatar_url as author_avatar_url FROM messages m
 JOIN users u ON m.author_id = u.id
@@ -419,14 +500,14 @@ LIMIT 50
 `
 
 type ListMessagesInBeanRow struct {
-	ID              int64              `json:"id"`
-	BeanID          int64              `json:"bean_id"`
-	AuthorID        int64              `json:"author_id"`
-	Content         string             `json:"content"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
-	AuthorUsername  string             `json:"author_username"`
-	AuthorAvatarUrl pgtype.Text        `json:"author_avatar_url"`
+	ID              int64       `json:"id"`
+	BeanID          int64       `json:"bean_id"`
+	AuthorID        int64       `json:"author_id"`
+	Content         string      `json:"content"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       *time.Time  `json:"updated_at"`
+	AuthorUsername  string      `json:"author_username"`
+	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
 }
 
 func (q *Queries) ListMessagesInBean(ctx context.Context, beanID int64) ([]ListMessagesInBeanRow, error) {

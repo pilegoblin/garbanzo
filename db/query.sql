@@ -125,6 +125,30 @@ SELECT * FROM beans
 WHERE pod_id = $1
 ORDER BY name;
 
+-- name: ListBeansForPodFull :many
+SELECT
+    b.id,
+    b.name,
+    p.id as pod_id,
+    p.name as pod_name,
+    COALESCE(jsonb_agg(
+        json_build_object(
+            'id', m.id,
+            'content', m.content,
+            'created_at', m.created_at,
+            'author_id', u.id,
+            'author_username', u.username,
+            'author_avatar_url', u.avatar_url
+        ) ORDER BY m.created_at ASC
+    ) FILTER (WHERE m.id IS NOT NULL), '[]'::jsonb) as messages
+FROM beans b
+JOIN pods p ON b.pod_id = p.id
+LEFT JOIN messages m ON m.bean_id = b.id
+LEFT JOIN users u ON m.author_id = u.id
+WHERE b.pod_id = $1
+GROUP BY b.id, p.id, p.name
+ORDER BY b.name;
+
 -- name: UpdateBean :one
 UPDATE beans
 SET
@@ -141,13 +165,21 @@ WHERE id = $1;
 --
 
 -- name: CreateMessage :one
-INSERT INTO messages (
-  bean_id,
-  author_id,
-  content
-) VALUES (
-  $1, $2, $3
-) RETURNING *;
+WITH new_message AS (
+  INSERT INTO messages (
+    bean_id,
+    author_id,
+    content
+  ) VALUES (
+    $1, $2, $3
+  ) RETURNING *
+)
+SELECT
+  m.*,
+  u.username as author_username,
+  u.avatar_url as author_avatar_url
+FROM new_message m
+JOIN users u ON m.author_id = u.id;
 
 -- name: GetMessage :one
 SELECT * FROM messages

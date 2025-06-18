@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -61,12 +60,14 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		fmt.Fprintln(w, err)
+		slog.Error("failed to complete user auth", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	sess, err := session.GetSession(r)
 	if err != nil {
-		fmt.Fprintln(w, err)
+		slog.Error("failed to get session", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	sess.Values["authID"] = user.UserID

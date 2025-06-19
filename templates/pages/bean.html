@@ -3,7 +3,7 @@
 <!-- Messages -->
 
 <title>{{.PodName}} - Chat</title>
-<div class="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-800" id="posts"
+<div class="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-800" id="messages"
     style="overflow-anchor: none;">
     <!-- Welcome message -->
     <div class=" flex flex-col items-center justify-center py-8">
@@ -19,30 +19,31 @@
 
     <!-- Message -->
     {{range .Messages}}
-    {{template "post" .}}
+    {{template "message" .}}
     {{end}}
 </div>
 <!-- Message input -->
-<form hx-post="/{{.PodID}}/{{.ID}}/post" hx-swap="beforeend scroll:bottom"
-    hx-on::after-request="if(event.detail.successful) this.reset()" hx-target="#posts">
-    <div class="p-4 bg-stone-800 border-t border-stone-700">
-        <div class="bg-stone-700 rounded-lg p-1">
-            <div class="flex items-center px-2">
-                <div class="flex-1">
-                    <input type="text"
-                        class="w-full bg-transparent border-0 focus:ring-0 text-white py-2 px-2 outline-none"
-                        name="content">
+<div ws-connect="/ws/{{.PodID}}/{{.ID}}">
+    <form hx-trigger="submit" ws-send>
+        <div class="p-4 bg-stone-800 border-t border-stone-700">
+            <div class="bg-stone-700 rounded-lg p-1">
+                <div class="flex items-center px-2">
+                    <div class="flex-1">
+                        <input type="text"
+                            class="w-full bg-transparent border-0 focus:ring-0 text-white py-2 px-2 outline-none"
+                            name="content">
+                    </div>
+                    <button class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md ml-2" type="submit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="h-5 w-5">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
                 </div>
-                <button class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md ml-2" type="submit">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="h-5 w-5">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
             </div>
         </div>
-    </div>
-</form>
+    </form>
+</div>
 {{end}}

@@ -125,8 +125,8 @@ func (h *HandlerEnv) NewUserViewHandler(w http.ResponseWriter, r *http.Request) 
 	h.pc.Render(w, "new_user.html", nil)
 }
 
-// POST /{podID}/{beanID}/post
-func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
+// POST /message/{podID}/{beanID}
+func (h *HandlerEnv) SendMessageHandler(w http.ResponseWriter, r *http.Request) {
 	content := r.FormValue("content")
 
 	beanID, err := strconv.ParseInt(chi.URLParam(r, "beanID"), 10, 64)
@@ -150,7 +150,7 @@ func (h *HandlerEnv) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.pc.RenderFragment(w, "post.html", p)
+	h.pc.RenderFragment(w, "message.html", p)
 }
 
 // POST /pod/join
@@ -163,6 +163,11 @@ func (h *HandlerEnv) JoinPodHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pod, err := h.query.GetPodByInviteCode(r.Context(), pgtype.Text{String: inviteCode, Valid: true})
+	if err != nil {
+		slog.Error("failed to get pod by invite code", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	//_, err = h.db.JoinPod(r.Context(), userID, inviteCode)
 	_, err = h.query.AddPodMember(r.Context(), sqlc.AddPodMemberParams{
@@ -179,8 +184,8 @@ func (h *HandlerEnv) JoinPodHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /pod/{podID}
 func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
-	podID := chi.URLParam(r, "podID")
-	podIDInt, err := strconv.ParseInt(podID, 10, 64)
+	podIDParam := chi.URLParam(r, "podID")
+	podID, err := strconv.ParseInt(podIDParam, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -193,7 +198,7 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	check, err := h.query.CheckUserInPod(r.Context(), sqlc.CheckUserInPodParams{
 		UserID: userID,
-		PodID:  podIDInt,
+		PodID:  podID,
 	})
 
 	if !check || err != nil {
@@ -201,7 +206,7 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	beans, err := h.query.ListBeansForPodFull(r.Context(), podIDInt)
+	beans, err := h.query.ListBeansForPodFull(r.Context(), podID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -233,6 +238,6 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 	}
-
+	// TODO: Handle multiple beans
 	h.pc.Render(w, "bean.html", result[0])
 }

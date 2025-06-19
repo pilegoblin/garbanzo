@@ -60,7 +60,8 @@ func (s *Server) Run() {
 			r.Post("/user/new", s.handler.NewUserHandler)
 			r.Post("/pod/join", s.handler.JoinPodHandler)
 			r.Get("/pod/{podID}", s.handler.PodViewHandler)
-			r.Post("/{podID}/{beanID}/post", s.handler.CreatePost)
+			r.Post("/message/{podID}/{beanID}", s.handler.SendMessageHandler)
+			r.Get("/ws/{podID}/{beanID}", s.handler.WebsocketHandler)
 		})
 	})
 

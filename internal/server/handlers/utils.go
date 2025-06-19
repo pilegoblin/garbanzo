@@ -4,13 +4,17 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/pilegoblin/garbanzo/db/sqlc"
 	"github.com/pilegoblin/garbanzo/internal/pagecache"
+	"github.com/pilegoblin/garbanzo/internal/switchboard"
 )
 
 type HandlerEnv struct {
-	query *sqlc.Queries
-	pc    *pagecache.PageCache
+	query       *sqlc.Queries
+	pc          *pagecache.PageCache
+	upgrader    *websocket.Upgrader
+	switchboard *switchboard.Switchboard
 }
 
 type FullMessage struct {
@@ -34,6 +38,16 @@ func NewHandlerEnv(queries *sqlc.Queries) *HandlerEnv {
 	return &HandlerEnv{
 		query: queries,
 		pc:    pagecache.NewPageCache(),
+		upgrader: &websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				// allowedOrigins := []string{
+				// 	"http://localhost:8080",
+				// }
+				// return slices.Contains(allowedOrigins, r.Header.Get("Origin"))
+				return true
+			},
+		},
+		switchboard: switchboard.New(),
 	}
 }
 

@@ -1,6 +1,7 @@
 package pagecache
 
 import (
+	"bytes"
 	"html/template"
 	"io/fs"
 	"log/slog"
@@ -111,4 +112,20 @@ func (pc *PageCache) RenderFragment(w http.ResponseWriter, name string, data any
 		slog.Error("failed to render template", "name", name, "error", err)
 		os.Exit(1)
 	}
+}
+
+func (pc *PageCache) FragmentString(name string, data any) string {
+	t, ok := pc.cache[name]
+	if !ok {
+		slog.Error("template not found", "name", name)
+		os.Exit(1)
+	}
+
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, name, data); err != nil {
+		slog.Error("failed to render template", "name", name, "error", err)
+		os.Exit(1)
+	}
+
+	return buf.String()
 }

@@ -106,9 +106,10 @@ func (h *HandlerEnv) NewUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.query.CreateUser(r.Context(), sqlc.CreateUserParams{
-		Username: username,
-		AuthID:   authID,
-		Email:    email,
+		Username:  username,
+		AuthID:    authID,
+		Email:     email,
+		UserColor: createUserColor(username),
 	})
 
 	if err != nil {

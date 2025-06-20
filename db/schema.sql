@@ -7,7 +7,8 @@ CREATE TABLE "users" (
   "email" varchar UNIQUE NOT NULL,
   "auth_id" varchar UNIQUE NOT NULL,
   "avatar_url" varchar,
-  "created_at" timestamptz NOT NULL DEFAULT (now())
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "user_color" varchar NOT NULL DEFAULT '000000'
 );
 
 --

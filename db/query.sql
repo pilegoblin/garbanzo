@@ -7,9 +7,10 @@ INSERT INTO users (
   username,
   email,
   auth_id,
-  avatar_url
+  avatar_url,
+  user_color
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 ) RETURNING *;
 
 -- name: GetUserByID :one
@@ -138,7 +139,8 @@ SELECT
             'created_at', m.created_at,
             'author_id', u.id,
             'author_username', u.username,
-            'author_avatar_url', u.avatar_url
+            'author_avatar_url', u.avatar_url,
+            'author_user_color', u.user_color
         ) ORDER BY m.created_at ASC
     ) FILTER (WHERE m.id IS NOT NULL), '[]'::jsonb) as messages
 FROM beans b
@@ -177,7 +179,8 @@ WITH new_message AS (
 SELECT
   m.*,
   u.username as author_username,
-  u.avatar_url as author_avatar_url
+  u.avatar_url as author_avatar_url,
+  u.user_color as author_user_color
 FROM new_message m
 JOIN users u ON m.author_id = u.id;
 

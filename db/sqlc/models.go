@@ -48,4 +48,5 @@ type User struct {
 	AuthID    string      `json:"auth_id"`
 	AvatarUrl pgtype.Text `json:"avatar_url"`
 	CreatedAt time.Time   `json:"created_at"`
+	UserColor string      `json:"user_color"`
 }

@@ -101,7 +101,8 @@ WITH new_message AS (
 SELECT
   m.id, m.bean_id, m.author_id, m.content, m.created_at, m.updated_at,
   u.username as author_username,
-  u.avatar_url as author_avatar_url
+  u.avatar_url as author_avatar_url,
+  u.user_color as author_user_color
 FROM new_message m
 JOIN users u ON m.author_id = u.id
 `
@@ -121,6 +122,7 @@ type CreateMessageRow struct {
 	UpdatedAt       *time.Time  `json:"updated_at"`
 	AuthorUsername  string      `json:"author_username"`
 	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
+	AuthorUserColor string      `json:"author_user_color"`
 }
 
 // Message Queries
@@ -136,6 +138,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (C
 		&i.UpdatedAt,
 		&i.AuthorUsername,
 		&i.AuthorAvatarUrl,
+		&i.AuthorUserColor,
 	)
 	return i, err
 }
@@ -177,10 +180,11 @@ INSERT INTO users (
   username,
   email,
   auth_id,
-  avatar_url
+  avatar_url,
+  user_color
 ) VALUES (
-  $1, $2, $3, $4
-) RETURNING id, username, email, auth_id, avatar_url, created_at
+  $1, $2, $3, $4, $5
+) RETURNING id, username, email, auth_id, avatar_url, created_at, user_color
 `
 
 type CreateUserParams struct {
@@ -188,6 +192,7 @@ type CreateUserParams struct {
 	Email     string      `json:"email"`
 	AuthID    string      `json:"auth_id"`
 	AvatarUrl pgtype.Text `json:"avatar_url"`
+	UserColor string      `json:"user_color"`
 }
 
 // User Queries
@@ -197,6 +202,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Email,
 		arg.AuthID,
 		arg.AvatarUrl,
+		arg.UserColor,
 	)
 	var i User
 	err := row.Scan(
@@ -206,6 +212,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.AuthID,
 		&i.AvatarUrl,
 		&i.CreatedAt,
+		&i.UserColor,
 	)
 	return i, err
 }
@@ -345,7 +352,7 @@ func (q *Queries) GetPodMember(ctx context.Context, arg GetPodMemberParams) (Pod
 }
 
 const getUserByAuthID = `-- name: GetUserByAuthID :one
-SELECT id, username, email, auth_id, avatar_url, created_at FROM users
+SELECT id, username, email, auth_id, avatar_url, created_at, user_color FROM users
 WHERE auth_id = $1 LIMIT 1
 `
 
@@ -359,12 +366,13 @@ func (q *Queries) GetUserByAuthID(ctx context.Context, authID string) (User, err
 		&i.AuthID,
 		&i.AvatarUrl,
 		&i.CreatedAt,
+		&i.UserColor,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, auth_id, avatar_url, created_at FROM users
+SELECT id, username, email, auth_id, avatar_url, created_at, user_color FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -378,12 +386,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.AuthID,
 		&i.AvatarUrl,
 		&i.CreatedAt,
+		&i.UserColor,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, email, auth_id, avatar_url, created_at FROM users
+SELECT id, username, email, auth_id, avatar_url, created_at, user_color FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -397,6 +406,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.AuthID,
 		&i.AvatarUrl,
 		&i.CreatedAt,
+		&i.UserColor,
 	)
 	return i, err
 }
@@ -445,7 +455,8 @@ SELECT
             'created_at', m.created_at,
             'author_id', u.id,
             'author_username', u.username,
-            'author_avatar_url', u.avatar_url
+            'author_avatar_url', u.avatar_url,
+            'author_user_color', u.user_color
         ) ORDER BY m.created_at ASC
     ) FILTER (WHERE m.id IS NOT NULL), '[]'::jsonb) as messages
 FROM beans b
@@ -703,7 +714,7 @@ SET
   username = $1,
   avatar_url = $2
 WHERE id = $3
-RETURNING id, username, email, auth_id, avatar_url, created_at
+RETURNING id, username, email, auth_id, avatar_url, created_at, user_color
 `
 
 type UpdateUserParams struct {
@@ -722,6 +733,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.AuthID,
 		&i.AvatarUrl,
 		&i.CreatedAt,
+		&i.UserColor,
 	)
 	return i, err
 }

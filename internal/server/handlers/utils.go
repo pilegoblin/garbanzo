@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"fmt"
+	"hash/fnv"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -21,6 +24,7 @@ type FullMessage struct {
 	AuthorAvatarURL string    `json:"author_avatar_url"`
 	AuthorID        int       `json:"author_id"`
 	AuthorUsername  string    `json:"author_username"`
+	AuthorUserColor string    `json:"author_user_color"`
 	Content         string    `json:"content"`
 	CreatedAt       time.Time `json:"created_at"`
 	ID              int       `json:"id"`
@@ -54,4 +58,13 @@ func NewHandlerEnv(queries *sqlc.Queries) *HandlerEnv {
 func redirect(w http.ResponseWriter, path string) {
 	w.Header().Set("Location", path)
 	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func createUserColor(username string) string {
+	hasher := fnv.New64a()
+	hasher.Write([]byte(username))
+	source := rand.NewSource(int64(hasher.Sum64()))
+	r := rand.New(source)
+	num := r.Intn(16777215)
+	return fmt.Sprintf("%06x", num)
 }

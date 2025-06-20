@@ -40,7 +40,7 @@ type BeanWithMessages struct {
 	Messages []FullMessage `json:"messages"`
 }
 
-func NewHandlerEnv(config *config.Config, queries *sqlc.Queries) *HandlerEnv {
+func New(config *config.Config, queries *sqlc.Queries) *HandlerEnv {
 	return &HandlerEnv{
 		query: queries,
 		pc:    pagecache.NewPageCache(),

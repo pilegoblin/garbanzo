@@ -70,7 +70,28 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		slog.Info("received message on websocket", "message", data)
+		content, ok := data["content"].(string)
+		if !ok {
+			continue
+		}
+
+		if len(content) == 0 || len(content) > 255 {
+			continue
+		}
+
+		m, err := h.query.CreateMessage(r.Context(), sqlc.CreateMessageParams{
+			BeanID:   beanID,
+			AuthorID: userID,
+			Content:  content,
+		})
+		if err != nil {
+			slog.Error("failed to create message", "error", err)
+			continue
+		}
+
+		messageString := h.pc.FragmentString("oob_message.html", m)
+
+		h.switchboard.BroadcastMessage(podID, beanID, messageString)
 	}
 
 }

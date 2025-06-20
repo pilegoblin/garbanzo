@@ -32,6 +32,7 @@ func setup(config *config.Config) {
 	googleSecret := config.Auth.GoogleClientSecret
 
 	port := config.Server.Port
+	host := config.Server.Host
 	environment := config.Environment
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
@@ -43,10 +44,17 @@ func setup(config *config.Config) {
 	store.Options.HttpOnly = true // HttpOnly should always be enabled
 	store.Options.Secure = environment == "prod"
 
+	var callbackURL string
+	if environment == "prod" {
+		callbackURL = "https://" + host + "/auth/callback?provider=google"
+	} else {
+		callbackURL = "http://localhost:" + port + "/auth/callback?provider=google"
+	}
+
 	gothic.Store = store
 	goth.UseProviders(
 		google.New(
-			googleKey, googleSecret, "http://localhost:"+port+"/auth/callback?provider=google",
+			googleKey, googleSecret, callbackURL,
 		),
 	)
 }

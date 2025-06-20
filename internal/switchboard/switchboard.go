@@ -72,3 +72,26 @@ func (sb *Switchboard) UnregisterUser(podID, beanID int64, uniqueID ksuid.KSUID)
 
 	slog.Info("unregistered user", "podID", podID, "beanID", beanID, "uniqueID", uniqueID)
 }
+
+func (sb *Switchboard) BroadcastMessage(podID, beanID int64, message string) {
+	sb.rw.RLock()
+	defer sb.rw.RUnlock()
+
+	pod, ok := sb.pods[podID]
+	if !ok {
+		slog.Warn("broadcasting message to non-existent pod", "podID", podID)
+		return
+	}
+
+	bean, ok := pod.beans[beanID]
+	if !ok {
+		slog.Warn("broadcasting message to non-existent bean", "beanID", beanID)
+		return
+	}
+
+	for _, conn := range bean.users {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+			slog.Error("failed to write message", "error", err)
+		}
+	}
+}

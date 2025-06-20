@@ -5,10 +5,12 @@ import (
 	"hash/fnv"
 	"math/rand"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/pilegoblin/garbanzo/db/sqlc"
+	"github.com/pilegoblin/garbanzo/internal/config"
 	"github.com/pilegoblin/garbanzo/internal/pagecache"
 	"github.com/pilegoblin/garbanzo/internal/switchboard"
 )
@@ -38,17 +40,18 @@ type BeanWithMessages struct {
 	Messages []FullMessage `json:"messages"`
 }
 
-func NewHandlerEnv(queries *sqlc.Queries) *HandlerEnv {
+func NewHandlerEnv(config *config.Config, queries *sqlc.Queries) *HandlerEnv {
 	return &HandlerEnv{
 		query: queries,
 		pc:    pagecache.NewPageCache(),
 		upgrader: &websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
-				// allowedOrigins := []string{
-				// 	"http://localhost:8080",
-				// }
-				// return slices.Contains(allowedOrigins, r.Header.Get("Origin"))
-				return true
+				allowedOrigins := []string{
+					"http://localhost:8080",
+					"https://" + config.Server.Host,
+					"https://www." + config.Server.Host,
+				}
+				return slices.Contains(allowedOrigins, r.Header.Get("Origin"))
 			},
 		},
 		switchboard: switchboard.New(),

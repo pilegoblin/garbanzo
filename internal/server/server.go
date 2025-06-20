@@ -28,7 +28,7 @@ func New(config *config.Config) *Server {
 		Router:  chi.NewRouter(),
 		DB:      db,
 		port:    config.Server.Port,
-		handler: handlers.NewHandlerEnv(q),
+		handler: handlers.NewHandlerEnv(config, q),
 	}
 }
 

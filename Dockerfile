@@ -9,6 +9,7 @@ ENV HOST=garbanzo.chat
 ENV ENVIRONMENT=prod
 EXPOSE ${PORT}
 
+RUN mkdir -p ./bin
 RUN make update-tailwind
 RUN make css
 

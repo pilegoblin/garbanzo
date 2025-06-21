@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+.user-color {
+    background-color: var(--user-color-value);
+} 

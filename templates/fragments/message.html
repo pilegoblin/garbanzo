@@ -1,7 +1,7 @@
 {{define "message"}}
 <div class="flex group">
     <div class="mr-4 flex-shrink-0">
-        <div class="w-10 h-10 rounded-full bg-[#{{.AuthorUserColor}}] flex items-center justify-center">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center user-color" style="--user-color-value: #{{.AuthorUserColor}}">
             <span class="font-bold text-sm">{{firstLetter .AuthorUsername}}</span>
         </div>
     </div>

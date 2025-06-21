@@ -47,6 +47,13 @@ func (s *Server) Run() {
 		r.Use(middleware.Logger)
 		r.Use(chimiddleware.Recoverer)
 
+		// static
+		r.Get("/static/*", func(w http.ResponseWriter, r *http.Request) {
+			fs := http.FileServer(http.Dir("./dist/"))
+			w.Header().Add("Cache-Control", "no-cache")
+			http.StripPrefix("/static/", fs).ServeHTTP(w, r)
+		})
+
 		// auth routes
 		r.Get("/login", s.handler.LoginViewHandler)
 		r.Get("/auth", handlers.AuthHandler)

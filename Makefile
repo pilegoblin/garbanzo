@@ -17,4 +17,4 @@ update-tailwind:
 
 .PHONY: css
 css:
-	@./bin/tailwind -i ./templates/main.css -o ./dist/output.css --minify
+	@./bin/tailwind -i ./templates/main.css -o ./public/output.css --minify

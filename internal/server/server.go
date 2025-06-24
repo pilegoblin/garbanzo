@@ -22,7 +22,7 @@ type Server struct {
 }
 
 func New(config *config.Config) *Server {
-	db := database.NewDatabase(&config.Database)
+	db := database.New(&config.Database)
 	q := database.NewQueries(db)
 	return &Server{
 		Router:  chi.NewRouter(),
@@ -47,11 +47,11 @@ func (s *Server) Run() {
 		r.Use(middleware.Logger)
 		r.Use(chimiddleware.Recoverer)
 
-		// static
-		r.Get("/static/*", func(w http.ResponseWriter, r *http.Request) {
-			fs := http.FileServer(http.Dir("./dist/"))
+		// public
+		r.Get("/public/*", func(w http.ResponseWriter, r *http.Request) {
+			fs := http.FileServer(http.Dir("./public/"))
 			w.Header().Add("Cache-Control", "no-cache")
-			http.StripPrefix("/static/", fs).ServeHTTP(w, r)
+			http.StripPrefix("/public/", fs).ServeHTTP(w, r)
 		})
 
 		// auth routes

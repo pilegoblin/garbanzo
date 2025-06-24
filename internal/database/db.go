@@ -9,7 +9,7 @@ import (
 	"github.com/pilegoblin/garbanzo/internal/config"
 )
 
-func NewDatabase(config *config.DatabaseConfig) *pgxpool.Pool {
+func New(config *config.DatabaseConfig) *pgxpool.Pool {
 	db, err := pgxpool.New(context.Background(), config.DatabaseURL)
 	if err != nil {
 		panic(err)

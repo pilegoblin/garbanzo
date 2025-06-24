@@ -1,10 +1,11 @@
 package switchboard
 
 import (
+	"context"
 	"log/slog"
 	"sync"
 
-	"github.com/gorilla/websocket"
+	"github.com/coder/websocket"
 	"github.com/segmentio/ksuid"
 )
 
@@ -73,7 +74,7 @@ func (sb *Switchboard) UnregisterUser(podID, beanID int64, uniqueID ksuid.KSUID)
 	slog.Info("unregistered user", "podID", podID, "beanID", beanID, "uniqueID", uniqueID)
 }
 
-func (sb *Switchboard) BroadcastMessage(podID, beanID int64, message string) {
+func (sb *Switchboard) BroadcastMessage(ctx context.Context, podID, beanID, userID int64, message string) {
 	sb.rw.RLock()
 	defer sb.rw.RUnlock()
 
@@ -89,8 +90,10 @@ func (sb *Switchboard) BroadcastMessage(podID, beanID int64, message string) {
 		return
 	}
 
+	slog.Info("broadcasting message", "podID", podID, "beanID", beanID, "userID", userID)
+
 	for _, conn := range bean.users {
-		if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+		if err := conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
 			slog.Error("failed to write message", "error", err)
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/coder/websocket"
 	"github.com/go-chi/chi/v5"
 	"github.com/pilegoblin/garbanzo/db/sqlc"
 	"github.com/pilegoblin/garbanzo/internal/session"
@@ -46,20 +47,23 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := h.upgrader.Upgrade(w, r, nil)
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		OriginPatterns: h.origins,
+	})
+
 	if err != nil {
-		slog.Error("failed to upgrade to websocket", "error", err)
+		slog.Error("failed to initialize websocket", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer conn.Close()
+	defer conn.CloseNow()
 
 	uniqueID := ksuid.New()
 	h.switchboard.RegisterUser(podID, beanID, uniqueID, conn)
 	defer h.switchboard.UnregisterUser(podID, beanID, uniqueID)
 
 	for {
-		_, message, err := conn.ReadMessage()
+		_, message, err := conn.Read(r.Context())
 		if err != nil {
 			break
 		}
@@ -91,7 +95,7 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 
 		messageString := h.pc.FragmentString("oob_message.html", m)
 
-		h.switchboard.BroadcastMessage(podID, beanID, messageString)
+		h.switchboard.BroadcastMessage(r.Context(), podID, beanID, userID, messageString)
 	}
 
 }

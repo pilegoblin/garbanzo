@@ -73,5 +73,6 @@ func (s *Server) Run() {
 	})
 
 	slog.Info("Starting server on port " + s.port)
-	http.ListenAndServe(":"+s.port, s.Router)
+
+	slog.Error("Error starting server", "error", http.ListenAndServe(":"+s.port, s.Router))
 }

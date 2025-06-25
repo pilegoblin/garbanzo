@@ -2,10 +2,7 @@
     {{if eq .Action "new"}}
     <div hx-swap-oob="beforeend:#messages">
     {{end}}
-        <div class="flex group" id="{{.ID}}" 
-            {{if eq .Action "edit" }}
-                hx-swap-oob="true"
-            {{end}}>
+        <div class="flex group" id="{{.ID}}" {{if eq .Action "edit" }}hx-swap-oob="true"{{end}}>
             <div class="mr-4 flex-shrink-0">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center user-color" style="--user-color-value: #{{.AuthorUserColor}}">
                     <span class="font-bold text-sm">{{firstLetter .AuthorUsername}}</span>

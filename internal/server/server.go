@@ -67,12 +67,13 @@ func (s *Server) Run() {
 			r.Post("/user/new", s.handler.NewUserHandler)
 			r.Post("/pod/join", s.handler.JoinPodHandler)
 			r.Get("/pod/{podID}", s.handler.PodViewHandler)
-			r.Post("/message/{podID}/{beanID}", s.handler.SendMessageHandler)
 			r.Get("/ws/{podID}/{beanID}", s.handler.WebsocketHandler)
 		})
 	})
 
 	slog.Info("Starting server on port " + s.port)
 
-	slog.Error("Error starting server", "error", http.ListenAndServe(":"+s.port, s.Router))
+	if err := http.ListenAndServe(":"+s.port, s.Router); err != nil {
+		slog.Error("Error starting server", "error", err)
+	}
 }

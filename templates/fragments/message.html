@@ -1,18 +1,28 @@
 {{define "message"}}
-<div class="flex group">
-    <div class="mr-4 flex-shrink-0">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center user-color" style="--user-color-value: #{{.AuthorUserColor}}">
-            <span class="font-bold text-sm">{{firstLetter .AuthorUsername}}</span>
+    {{if eq .Action "new"}}
+    <div hx-swap-oob="beforeend:#messages">
+    {{end}}
+        <div class="flex group" id="{{.ID}}" 
+            {{if eq .Action "edit" }}
+                hx-swap-oob="true"
+            {{end}}>
+            <div class="mr-4 flex-shrink-0">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center user-color" style="--user-color-value: #{{.AuthorUserColor}}">
+                    <span class="font-bold text-sm">{{firstLetter .AuthorUsername}}</span>
+                </div>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-baseline">
+                    <h3 class="font-medium text-white">{{.AuthorUsername}}</h3>
+                    <span class="ml-2 text-xs text-stone-400">{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+                </div>
+                <div class="mt-1 text-stone-200">
+                    {{.Content}}
+                </div>
+            </div>
         </div>
+    {{if eq .Action "new"}}
     </div>
-    <div class="flex-1">
-        <div class="flex items-baseline">
-            <h3 class="font-medium text-white">{{.AuthorUsername}}</h3>
-            <span class="ml-2 text-xs text-stone-400">{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
-        </div>
-        <div class="mt-1 text-stone-200">
-            {{.Content}}
-        </div>
-    </div>
-</div>
-{{end}}{{template "message" .}}
+    {{end}}
+{{end}}
+{{template "message" .}}

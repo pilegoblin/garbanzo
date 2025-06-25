@@ -169,11 +169,12 @@ WHERE id = $1;
 -- name: CreateMessage :one
 WITH new_message AS (
   INSERT INTO messages (
+    id,
     bean_id,
     author_id,
     content
   ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4
   ) RETURNING *
 )
 SELECT

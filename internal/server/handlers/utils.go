@@ -21,14 +21,23 @@ type HandlerEnv struct {
 }
 
 type FullMessage struct {
-	AuthorAvatarURL string    `json:"author_avatar_url"`
-	AuthorID        int       `json:"author_id"`
-	AuthorUsername  string    `json:"author_username"`
-	AuthorUserColor string    `json:"author_user_color"`
-	Content         string    `json:"content"`
-	CreatedAt       time.Time `json:"created_at"`
-	ID              int       `json:"id"`
+	AuthorAvatarURL string        `json:"author_avatar_url"`
+	AuthorID        int           `json:"author_id"`
+	AuthorUsername  string        `json:"author_username"`
+	AuthorUserColor string        `json:"author_user_color"`
+	Content         string        `json:"content"`
+	CreatedAt       time.Time     `json:"created_at"`
+	ID              string        `json:"id"`
+	Action          MessageAction `json:"action"`
 }
+
+type MessageAction string
+
+const (
+	MessageActionNew    MessageAction = "new"
+	MessageActionEdit   MessageAction = "edit"
+	MessageActionDelete MessageAction = "delete"
+)
 
 type BeanWithMessages struct {
 	ID       int64         `json:"id"`

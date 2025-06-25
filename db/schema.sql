@@ -48,7 +48,7 @@ CREATE TABLE "beans" (
 -- Messages are posted by users within a specific bean.
 --
 CREATE TABLE "messages" (
-  "id" bigserial PRIMARY KEY,
+  "id" text PRIMARY KEY,
   "bean_id" bigint NOT NULL,
   "author_id" bigint NOT NULL,
   "content" text NOT NULL,

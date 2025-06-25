@@ -18,7 +18,7 @@ type Bean struct {
 }
 
 type Message struct {
-	ID        int64      `json:"id"`
+	ID        string     `json:"id"`
 	BeanID    int64      `json:"bean_id"`
 	AuthorID  int64      `json:"author_id"`
 	Content   string     `json:"content"`

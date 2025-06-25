@@ -126,34 +126,6 @@ func (h *HandlerEnv) NewUserViewHandler(w http.ResponseWriter, r *http.Request) 
 	h.pc.Render(w, "new_user.html", nil)
 }
 
-// POST /message/{podID}/{beanID}
-func (h *HandlerEnv) SendMessageHandler(w http.ResponseWriter, r *http.Request) {
-	content := r.FormValue("content")
-
-	beanID, err := strconv.ParseInt(chi.URLParam(r, "beanID"), 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	userID, err := session.GetUserID(r)
-	if err != nil {
-		redirect(w, "/login")
-		return
-	}
-
-	p, err := h.query.CreateMessage(r.Context(), sqlc.CreateMessageParams{
-		BeanID:   beanID,
-		AuthorID: userID,
-		Content:  content,
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	h.pc.RenderFragment(w, "message.html", p)
-}
-
 // POST /pod/join
 func (h *HandlerEnv) JoinPodHandler(w http.ResponseWriter, r *http.Request) {
 	inviteCode := r.FormValue("invite")

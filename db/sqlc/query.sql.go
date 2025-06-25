@@ -91,11 +91,12 @@ const createMessage = `-- name: CreateMessage :one
 
 WITH new_message AS (
   INSERT INTO messages (
+    id,
     bean_id,
     author_id,
     content
   ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4
   ) RETURNING id, bean_id, author_id, content, created_at, updated_at
 )
 SELECT
@@ -108,13 +109,14 @@ JOIN users u ON m.author_id = u.id
 `
 
 type CreateMessageParams struct {
+	ID       string `json:"id"`
 	BeanID   int64  `json:"bean_id"`
 	AuthorID int64  `json:"author_id"`
 	Content  string `json:"content"`
 }
 
 type CreateMessageRow struct {
-	ID              int64       `json:"id"`
+	ID              string      `json:"id"`
 	BeanID          int64       `json:"bean_id"`
 	AuthorID        int64       `json:"author_id"`
 	Content         string      `json:"content"`
@@ -127,7 +129,12 @@ type CreateMessageRow struct {
 
 // Message Queries
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (CreateMessageRow, error) {
-	row := q.db.QueryRow(ctx, createMessage, arg.BeanID, arg.AuthorID, arg.Content)
+	row := q.db.QueryRow(ctx, createMessage,
+		arg.ID,
+		arg.BeanID,
+		arg.AuthorID,
+		arg.Content,
+	)
 	var i CreateMessageRow
 	err := row.Scan(
 		&i.ID,
@@ -232,7 +239,7 @@ DELETE FROM messages
 WHERE id = $1
 `
 
-func (q *Queries) DeleteMessage(ctx context.Context, id int64) error {
+func (q *Queries) DeleteMessage(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, deleteMessage, id)
 	return err
 }
@@ -279,7 +286,7 @@ SELECT id, bean_id, author_id, content, created_at, updated_at FROM messages
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetMessage(ctx context.Context, id int64) (Message, error) {
+func (q *Queries) GetMessage(ctx context.Context, id string) (Message, error) {
 	row := q.db.QueryRow(ctx, getMessage, id)
 	var i Message
 	err := row.Scan(
@@ -511,7 +518,7 @@ LIMIT 50
 `
 
 type ListMessagesInBeanRow struct {
-	ID              int64       `json:"id"`
+	ID              string      `json:"id"`
 	BeanID          int64       `json:"bean_id"`
 	AuthorID        int64       `json:"author_id"`
 	Content         string      `json:"content"`
@@ -662,7 +669,7 @@ RETURNING id, bean_id, author_id, content, created_at, updated_at
 `
 
 type UpdateMessageParams struct {
-	ID      int64  `json:"id"`
+	ID      string `json:"id"`
 	Content string `json:"content"`
 }
 

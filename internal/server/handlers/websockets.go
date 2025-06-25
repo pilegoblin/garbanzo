@@ -83,7 +83,10 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		messageID := ksuid.New()
+
 		m, err := h.query.CreateMessage(r.Context(), sqlc.CreateMessageParams{
+			ID:       messageID.String(),
 			BeanID:   beanID,
 			AuthorID: userID,
 			Content:  content,
@@ -93,7 +96,14 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		messageString := h.pc.FragmentString("oob_message.html", m)
+		messageString := h.pc.FragmentString("message.html", FullMessage{
+			ID:              m.ID,
+			Content:         m.Content,
+			AuthorUsername:  m.AuthorUsername,
+			AuthorUserColor: m.AuthorUserColor,
+			CreatedAt:       m.CreatedAt,
+			Action:          MessageActionNew,
+		})
 
 		h.switchboard.BroadcastMessage(r.Context(), podID, beanID, userID, messageString)
 	}

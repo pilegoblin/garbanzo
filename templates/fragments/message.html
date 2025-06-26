@@ -1,25 +1,43 @@
 {{define "message"}}
-    {{if eq .Action "new"}}
-    <div hx-swap-oob="beforeend:#messages">
+{{if eq .Action "new"}}
+<div hx-swap-oob="beforeend:#messages">
     {{end}}
-        <div class="flex group" id="{{.ID}}" {{if eq .Action "edit" }}hx-swap-oob="true"{{end}}>
-            <div class="mr-4 flex-shrink-0">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center user-color" style="--user-color-value: #{{.AuthorUserColor}}">
-                    <span class="font-bold text-sm">{{firstLetter .AuthorUsername}}</span>
-                </div>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-baseline">
-                    <h3 class="font-medium text-white">{{.AuthorUsername}}</h3>
-                    <span class="ml-2 text-xs text-stone-400">{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
-                </div>
-                <div class="mt-1 text-stone-200">
-                    {{.Content}}
-                </div>
+    <div class="flex items-center group" id="{{.ID}}" {{if eq .Action "edit" }}hx-swap-oob="true" {{end}}>
+        <div class="mr-4 flex-shrink-0">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center user-color"
+                style="--user-color-value: #{{.AuthorUserColor}}">
+                <span class="font-bold text-sm">{{firstLetter .AuthorUsername}}</span>
             </div>
         </div>
-    {{if eq .Action "new"}}
+        <div class="flex-1 overflow-hidden text-wrap">
+            <div class="flex items-baseline">
+                <h3 class="font-medium text-white">{{.AuthorUsername}}</h3>
+                <span class="ml-2 text-xs text-stone-400">{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+            </div>
+            <div class="mt-1 text-stone-200 flex justify-between">
+                <p class="text-pretty">{{.Content}}</p>
+            </div>
+        </div>
+        {{if eq .SessionUserID .AuthorID}}
+        <div class="flex items-center ml-2">
+            <button 
+                class="text-stone-400 hover:text-stone-200 opacity-0 group-hover:opacity-100"
+                hx-get="/messages/{{.ID}}/edit"
+                hx-target="#{{.ID}}"
+                hx-swap="outerHTML"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="h-5 w-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                  </svg>
+                  
+            </button>
+        </div>
+        {{end}}
     </div>
-    {{end}}
+    {{if eq .Action "new"}}
+</div>
+{{end}}
 {{end}}
 {{template "message" .}}

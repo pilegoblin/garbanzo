@@ -181,7 +181,8 @@ SELECT
   m.*,
   u.username as author_username,
   u.avatar_url as author_avatar_url,
-  u.user_color as author_user_color
+  u.user_color as author_user_color,
+  u.id as author_id
 FROM new_message m
 JOIN users u ON m.author_id = u.id;
 
@@ -190,7 +191,7 @@ SELECT * FROM messages
 WHERE id = $1 LIMIT 1;
 
 -- name: ListMessagesInBean :many
-SELECT m.*, u.username as author_username, u.avatar_url as author_avatar_url FROM messages m
+SELECT m.*, u.username as author_username, u.id as author_id FROM messages m
 JOIN users u ON m.author_id = u.id
 WHERE bean_id = $1
 ORDER BY m.created_at

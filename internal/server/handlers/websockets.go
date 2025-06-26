@@ -96,13 +96,15 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		messageString := h.pc.FragmentString("message.html", FullMessage{
+		messageString := h.pc.FragmentString("message.html", MessageData{
 			ID:              m.ID,
 			Content:         m.Content,
 			AuthorUsername:  m.AuthorUsername,
 			AuthorUserColor: m.AuthorUserColor,
+			AuthorID:        m.AuthorID,
 			CreatedAt:       m.CreatedAt,
 			Action:          MessageActionNew,
+			SessionUserID:   userID,
 		})
 
 		h.switchboard.BroadcastMessage(r.Context(), podID, beanID, userID, messageString)

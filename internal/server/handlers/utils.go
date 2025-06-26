@@ -20,15 +20,16 @@ type HandlerEnv struct {
 	origins     []string
 }
 
-type FullMessage struct {
+type MessageData struct {
 	AuthorAvatarURL string        `json:"author_avatar_url"`
-	AuthorID        int           `json:"author_id"`
+	AuthorID        int64         `json:"author_id"`
 	AuthorUsername  string        `json:"author_username"`
 	AuthorUserColor string        `json:"author_user_color"`
 	Content         string        `json:"content"`
 	CreatedAt       time.Time     `json:"created_at"`
 	ID              string        `json:"id"`
 	Action          MessageAction `json:"action"`
+	SessionUserID   int64         `json:"session_user_id"`
 }
 
 type MessageAction string
@@ -44,7 +45,7 @@ type BeanWithMessages struct {
 	Name     string        `json:"name"`
 	PodID    int64         `json:"pod_id"`
 	PodName  string        `json:"pod_name"`
-	Messages []FullMessage `json:"messages"`
+	Messages []MessageData `json:"messages"`
 }
 
 func New(config *config.Config, queries *sqlc.Queries) *HandlerEnv {

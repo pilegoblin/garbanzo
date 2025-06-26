@@ -103,7 +103,8 @@ SELECT
   m.id, m.bean_id, m.author_id, m.content, m.created_at, m.updated_at,
   u.username as author_username,
   u.avatar_url as author_avatar_url,
-  u.user_color as author_user_color
+  u.user_color as author_user_color,
+  u.id as author_id
 FROM new_message m
 JOIN users u ON m.author_id = u.id
 `
@@ -125,6 +126,7 @@ type CreateMessageRow struct {
 	AuthorUsername  string      `json:"author_username"`
 	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
 	AuthorUserColor string      `json:"author_user_color"`
+	AuthorID_2      int64       `json:"author_id_2"`
 }
 
 // Message Queries
@@ -146,6 +148,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (C
 		&i.AuthorUsername,
 		&i.AuthorAvatarUrl,
 		&i.AuthorUserColor,
+		&i.AuthorID_2,
 	)
 	return i, err
 }
@@ -510,7 +513,7 @@ func (q *Queries) ListBeansForPodFull(ctx context.Context, podID int64) ([]ListB
 }
 
 const listMessagesInBean = `-- name: ListMessagesInBean :many
-SELECT m.id, m.bean_id, m.author_id, m.content, m.created_at, m.updated_at, u.username as author_username, u.avatar_url as author_avatar_url FROM messages m
+SELECT m.id, m.bean_id, m.author_id, m.content, m.created_at, m.updated_at, u.username as author_username, u.id as author_id FROM messages m
 JOIN users u ON m.author_id = u.id
 WHERE bean_id = $1
 ORDER BY m.created_at
@@ -518,14 +521,14 @@ LIMIT 50
 `
 
 type ListMessagesInBeanRow struct {
-	ID              string      `json:"id"`
-	BeanID          int64       `json:"bean_id"`
-	AuthorID        int64       `json:"author_id"`
-	Content         string      `json:"content"`
-	CreatedAt       time.Time   `json:"created_at"`
-	UpdatedAt       *time.Time  `json:"updated_at"`
-	AuthorUsername  string      `json:"author_username"`
-	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
+	ID             string     `json:"id"`
+	BeanID         int64      `json:"bean_id"`
+	AuthorID       int64      `json:"author_id"`
+	Content        string     `json:"content"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      *time.Time `json:"updated_at"`
+	AuthorUsername string     `json:"author_username"`
+	AuthorID_2     int64      `json:"author_id_2"`
 }
 
 func (q *Queries) ListMessagesInBean(ctx context.Context, beanID int64) ([]ListMessagesInBeanRow, error) {
@@ -545,7 +548,7 @@ func (q *Queries) ListMessagesInBean(ctx context.Context, beanID int64) ([]ListM
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.AuthorUsername,
-			&i.AuthorAvatarUrl,
+			&i.AuthorID_2,
 		); err != nil {
 			return nil, err
 		}

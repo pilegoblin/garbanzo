@@ -189,7 +189,7 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Doing some shenanigans because the sql query returns json for messages
 	for _, bean := range beans {
-		var messages []FullMessage
+		var messages []MessageData
 		bytes, err := json.Marshal(bean.Messages)
 		if err != nil {
 			slog.Error("failed to marshal messages", "error", err)
@@ -202,6 +202,7 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		result = append(result, BeanWithMessages{
 			ID:       bean.ID,
 			Name:     bean.Name,
@@ -211,6 +212,12 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 	}
+	bean := result[0]
+
+	for i := range bean.Messages {
+		bean.Messages[i].SessionUserID = userID
+	}
+
 	// TODO: Handle multiple beans
-	h.pc.Render(w, "bean.html", result[0])
+	h.pc.Render(w, "bean.html", bean)
 }

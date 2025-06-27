@@ -63,21 +63,31 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /auth/callback
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
+
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		slog.Error("failed to complete user auth", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	sess, err := session.GetSession(r)
 	if err != nil {
 		slog.Error("failed to get session", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	sess.Values["authID"] = user.UserID
 	sess.Values["email"] = user.Email
-	sess.Save(r, w)
+
+	err = sess.Save(r, w)
+	if err != nil {
+		slog.Error("failed to save session", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	redirect(w, "/")
 }
 

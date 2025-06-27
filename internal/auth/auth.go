@@ -1,22 +1,16 @@
 package auth
 
 import (
-	"errors"
-	"net/http"
+	"log/slog"
 	"sync"
 
-	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	"github.com/pilegoblin/garbanzo/internal/config"
+	"github.com/pilegoblin/garbanzo/internal/session"
 )
 
-const (
-	SessionName = "gbzo-session"
-)
-
-var store *sessions.CookieStore
 var authOnce sync.Once
 
 func SetupAuth(config *config.Config) {
@@ -27,22 +21,11 @@ func SetupAuth(config *config.Config) {
 
 // Sets up the goth package to do what it needs to do
 func setup(config *config.Config) {
-	sessionSecret := config.Auth.SessionSecret
 	googleKey := config.Auth.GoogleClientID
 	googleSecret := config.Auth.GoogleClientSecret
-
 	port := config.Server.Port
 	host := config.Server.Host
 	environment := config.Environment
-
-	store = sessions.NewCookieStore([]byte(sessionSecret))
-
-	maxAge := 86400 * 30 // 30 days
-
-	store.MaxAge(maxAge)
-	store.Options.Path = "/"
-	store.Options.HttpOnly = true // HttpOnly should always be enabled
-	store.Options.Secure = environment == "prod"
 
 	var callbackURL string
 	if environment == "prod" {
@@ -51,21 +34,21 @@ func setup(config *config.Config) {
 		callbackURL = "http://localhost:" + port + "/auth/callback?provider=google"
 	}
 
+	store, err := session.GetSessionStore()
+	if err != nil {
+		panic(err)
+	}
+
+	// Add validation
+	if store == nil {
+		panic("session store is nil")
+	}
+
+	slog.Info("Setting up Goth with session store", "callbackURL", callbackURL)
 	gothic.Store = store
 	goth.UseProviders(
 		google.New(
 			googleKey, googleSecret, callbackURL,
 		),
 	)
-}
-
-func GetSession(r *http.Request) (*sessions.Session, error) {
-	if store == nil {
-		return nil, errors.New("store not initialized")
-	}
-	session, err := store.Get(r, SessionName)
-	if err != nil {
-		return nil, err
-	}
-	return session, nil
 }

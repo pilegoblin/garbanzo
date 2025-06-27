@@ -6,17 +6,38 @@ import (
 	"sync"
 
 	"github.com/gorilla/sessions"
+	"github.com/pilegoblin/garbanzo/internal/config"
+)
+
+const (
+	SessionName = "gbzo-session"
 )
 
 var store *sessions.CookieStore
 var storeOnce sync.Once
 
-func GetSession(r *http.Request) (*sessions.Session, error) {
+func SetupSessionStore(config *config.Config) {
 	storeOnce.Do(func() {
-		store = sessions.NewCookieStore([]byte("secret"))
-	})
+		store = sessions.NewCookieStore([]byte(config.Auth.SessionSecret))
+		maxAge := 86400 * 30 // 30 days
 
-	session, err := store.Get(r, "gbzo-session")
+		store.MaxAge(maxAge)
+		store.Options.Path = "/"
+		store.Options.HttpOnly = true // HttpOnly should always be enabled
+		store.Options.Secure = false
+		store.Options.SameSite = http.SameSiteLaxMode
+	})
+}
+
+func GetSessionStore() (*sessions.CookieStore, error) {
+	if store == nil {
+		return nil, errors.New("session store not initialized")
+	}
+	return store, nil
+}
+
+func GetSession(r *http.Request) (*sessions.Session, error) {
+	session, err := store.Get(r, SessionName)
 	if err != nil {
 		return nil, err
 	}

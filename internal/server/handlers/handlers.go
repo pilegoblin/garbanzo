@@ -215,7 +215,7 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 	bean := result[0]
 
 	for i := range bean.Messages {
-		bean.Messages[i].SessionUserID = userID
+		bean.Messages[i].Editable = bean.Messages[i].AuthorID == userID
 	}
 
 	// TODO: Handle multiple beans

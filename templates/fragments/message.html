@@ -18,7 +18,7 @@
                 <div class="flex-1 min-w-0 break-words">
                     {{.Content}}
                 </div>
-                {{if eq .SessionUserID .AuthorID}}
+                {{if .Editable}}
                 <div class="flex items-center ml-2 flex-shrink-0">
                     <button 
                         class="text-stone-400 hover:text-stone-200 opacity-0 group-hover:opacity-100"

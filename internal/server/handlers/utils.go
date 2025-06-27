@@ -29,7 +29,7 @@ type MessageData struct {
 	CreatedAt       time.Time     `json:"created_at"`
 	ID              string        `json:"id"`
 	Action          MessageAction `json:"action"`
-	SessionUserID   int64         `json:"session_user_id"`
+	Editable        bool          `json:"editable"`
 }
 
 type MessageAction string

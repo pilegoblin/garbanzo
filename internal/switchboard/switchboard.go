@@ -9,8 +9,13 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
+type UserSocket struct {
+	conn   *websocket.Conn
+	userID int64
+}
+
 type BeanManager struct {
-	users map[ksuid.KSUID]*websocket.Conn
+	users map[ksuid.KSUID]*UserSocket
 }
 
 type PodManager struct {
@@ -28,7 +33,7 @@ func New() *Switchboard {
 	}
 }
 
-func (sb *Switchboard) RegisterUser(podID, beanID int64, uniqueID ksuid.KSUID, conn *websocket.Conn) {
+func (sb *Switchboard) RegisterUser(podID, beanID, userID int64, uniqueID ksuid.KSUID, conn *websocket.Conn) {
 	sb.rw.Lock()
 	defer sb.rw.Unlock()
 
@@ -43,12 +48,15 @@ func (sb *Switchboard) RegisterUser(podID, beanID int64, uniqueID ksuid.KSUID, c
 	bean, ok := pod.beans[beanID]
 	if !ok {
 		bean = &BeanManager{
-			users: make(map[ksuid.KSUID]*websocket.Conn),
+			users: make(map[ksuid.KSUID]*UserSocket),
 		}
 		pod.beans[beanID] = bean
 	}
 
-	bean.users[uniqueID] = conn
+	bean.users[uniqueID] = &UserSocket{
+		conn:   conn,
+		userID: userID,
+	}
 
 	slog.Info("registered user", "podID", podID, "beanID", beanID, "uniqueID", uniqueID)
 }
@@ -74,6 +82,7 @@ func (sb *Switchboard) UnregisterUser(podID, beanID int64, uniqueID ksuid.KSUID)
 	slog.Info("unregistered user", "podID", podID, "beanID", beanID, "uniqueID", uniqueID)
 }
 
+// BroadcastMessage sends a message to every user in the bean
 func (sb *Switchboard) BroadcastMessage(ctx context.Context, podID, beanID, userID int64, message string) {
 	sb.rw.RLock()
 	defer sb.rw.RUnlock()
@@ -92,8 +101,64 @@ func (sb *Switchboard) BroadcastMessage(ctx context.Context, podID, beanID, user
 
 	slog.Info("broadcasting message", "podID", podID, "beanID", beanID, "userID", userID)
 
-	for _, conn := range bean.users {
-		if err := conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
+	for _, user := range bean.users {
+		if err := user.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
+			slog.Error("failed to write message", "error", err)
+		}
+	}
+}
+
+// SendMessage sends a message to a specific user
+func (sb *Switchboard) SendMessage(ctx context.Context, podID, beanID, userID int64, message string) {
+	sb.rw.RLock()
+	defer sb.rw.RUnlock()
+
+	pod, ok := sb.pods[podID]
+	if !ok {
+		slog.Warn("sending message to non-existent pod", "podID", podID)
+		return
+	}
+
+	bean, ok := pod.beans[beanID]
+	if !ok {
+		slog.Warn("sending message to non-existent bean", "beanID", beanID)
+		return
+	}
+
+	for _, user := range bean.users {
+		if user.userID != userID {
+			continue
+		}
+
+		if err := user.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
+			slog.Error("failed to write message", "error", err)
+		}
+	}
+}
+
+// Sends message to everyone but one user
+func (sb *Switchboard) SendMessageToOthers(ctx context.Context, podID, beanID, userID int64, message string) {
+	sb.rw.RLock()
+	defer sb.rw.RUnlock()
+
+	pod, ok := sb.pods[podID]
+	if !ok {
+		slog.Warn("sending message to non-existent pod", "podID", podID)
+		return
+	}
+
+	bean, ok := pod.beans[beanID]
+	if !ok {
+		slog.Warn("sending message to non-existent bean", "beanID", beanID)
+		return
+	}
+
+	for _, user := range bean.users {
+		if user.userID == userID {
+			continue
+		}
+
+		if err := user.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
 			slog.Error("failed to write message", "error", err)
 		}
 	}

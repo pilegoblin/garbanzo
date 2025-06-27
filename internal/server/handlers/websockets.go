@@ -59,7 +59,7 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.CloseNow()
 
 	uniqueID := ksuid.New()
-	h.switchboard.RegisterUser(podID, beanID, uniqueID, conn)
+	h.switchboard.RegisterUser(podID, beanID, userID, uniqueID, conn)
 	defer h.switchboard.UnregisterUser(podID, beanID, uniqueID)
 
 	for {
@@ -79,7 +79,7 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if len(content) == 0 || len(content) > 255 {
+		if len(content) == 0 || len(content) > 2048 {
 			continue
 		}
 
@@ -96,7 +96,7 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		messageString := h.pc.FragmentString("message.html", MessageData{
+		messageStringSender := h.pc.FragmentString("message.html", MessageData{
 			ID:              m.ID,
 			Content:         m.Content,
 			AuthorUsername:  m.AuthorUsername,
@@ -104,10 +104,22 @@ func (h *HandlerEnv) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 			AuthorID:        m.AuthorID,
 			CreatedAt:       m.CreatedAt,
 			Action:          MessageActionNew,
-			SessionUserID:   userID,
+			Editable:        true,
 		})
 
-		h.switchboard.BroadcastMessage(r.Context(), podID, beanID, userID, messageString)
+		messageStringReceiver := h.pc.FragmentString("message.html", MessageData{
+			ID:              m.ID,
+			Content:         m.Content,
+			AuthorUsername:  m.AuthorUsername,
+			AuthorUserColor: m.AuthorUserColor,
+			AuthorID:        m.AuthorID,
+			CreatedAt:       m.CreatedAt,
+			Action:          MessageActionNew,
+			Editable:        false,
+		})
+
+		h.switchboard.SendMessageToOthers(r.Context(), podID, beanID, userID, messageStringReceiver)
+		h.switchboard.SendMessage(r.Context(), podID, beanID, userID, messageStringSender)
 	}
 
 }

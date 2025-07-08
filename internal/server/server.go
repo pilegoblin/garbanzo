@@ -68,6 +68,8 @@ func (s *Server) Run() {
 			r.Post("/pod/join", s.handler.JoinPodHandler)
 			r.Get("/pod/{podID}", s.handler.PodViewHandler)
 			r.Get("/ws/{podID}/{beanID}", s.handler.WebsocketHandler)
+			r.Get("/messages/edit/{messageID}", s.handler.EditMessageViewHandler)
+			r.Post("/messages/edit/{messageID}", s.handler.EditMessageHandler)
 		})
 	})
 

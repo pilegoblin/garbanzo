@@ -231,3 +231,63 @@ func (h *HandlerEnv) PodViewHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Handle multiple beans
 	h.pc.Render(w, "bean.html", bean)
 }
+
+// GET /messages/edit/{messageID}
+// Retreives the template for editing a message
+func (h *HandlerEnv) EditMessageViewHandler(w http.ResponseWriter, r *http.Request) {
+	messageID := chi.URLParam(r, "messageID")
+	message, err := h.query.GetMessage(r.Context(), messageID)
+	if err != nil {
+		slog.Error("failed to get message", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.pc.RenderFragment(w, "edit_message.html", message)
+}
+
+// POST /messages/edit/{messageID}
+// Updates a message
+func (h *HandlerEnv) EditMessageHandler(w http.ResponseWriter, r *http.Request) {
+	messageID := chi.URLParam(r, "messageID")
+	content := r.FormValue("content")
+	if content == "" {
+		http.Error(w, "Content is required", http.StatusBadRequest)
+		return
+	}
+
+	m, err := h.query.UpdateMessage(r.Context(), sqlc.UpdateMessageParams{
+		ID:      messageID,
+		Content: content,
+	})
+	if err != nil {
+		slog.Error("failed to update message", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	messageStringSender := h.pc.FragmentString("message.html", MessageData{
+		ID:              m.ID,
+		Content:         m.Content,
+		AuthorUsername:  m.AuthorUsername,
+		AuthorUserColor: m.AuthorUserColor,
+		AuthorID:        m.AuthorID,
+		CreatedAt:       m.CreatedAt,
+		Action:          MessageActionEdit,
+		Editable:        true,
+	})
+
+	messageStringReceiver := h.pc.FragmentString("message.html", MessageData{
+		ID:              m.ID,
+		Content:         m.Content,
+		AuthorUsername:  m.AuthorUsername,
+		AuthorUserColor: m.AuthorUserColor,
+		AuthorID:        m.AuthorID,
+		CreatedAt:       m.CreatedAt,
+		Action:          MessageActionEdit,
+		Editable:        false,
+	})
+
+	h.switchboard.SendMessageToOthers(r.Context(), m.PodID, m.BeanID, m.AuthorID, messageStringReceiver)
+	h.switchboard.SendMessage(r.Context(), m.PodID, m.BeanID, m.AuthorID, messageStringSender)
+}

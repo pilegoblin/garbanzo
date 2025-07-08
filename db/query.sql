@@ -182,9 +182,12 @@ SELECT
   u.username as author_username,
   u.avatar_url as author_avatar_url,
   u.user_color as author_user_color,
-  u.id as author_id
+  u.id as author_id,
+  b.pod_id as pod_id,
+  b.name as bean_name
 FROM new_message m
-JOIN users u ON m.author_id = u.id;
+JOIN users u ON m.author_id = u.id
+JOIN beans b ON m.bean_id = b.id;
 
 -- name: GetMessage :one
 SELECT * FROM messages
@@ -198,12 +201,30 @@ ORDER BY m.created_at
 LIMIT 50;
 
 -- name: UpdateMessage :one
-UPDATE messages
-SET
-  content = $2,
-  updated_at = now()
-WHERE id = $1
-RETURNING *;
+WITH updated_message AS (
+  UPDATE messages
+  SET
+    content = $2,
+    updated_at = now()
+  WHERE messages.id = $1
+  RETURNING *
+)
+SELECT
+  um.id,
+  um.bean_id,
+  um.author_id,
+  um.content,
+  um.created_at,
+  um.updated_at,
+  b.pod_id,
+  b.name as bean_name,
+  u.username as author_username,
+  u.avatar_url as author_avatar_url,
+  u.user_color as author_user_color,
+  u.id as author_id
+FROM updated_message um
+JOIN beans b on um.bean_id = b.id
+JOIN users u ON um.author_id = u.id;
 
 -- name: DeleteMessage :exec
 DELETE FROM messages

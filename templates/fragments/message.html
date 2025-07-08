@@ -1,8 +1,11 @@
 {{define "message"}}
+{{if eq .Action "edit"}}
+<div hx-swap-oob="true" id="m{{.ID}}">
+{{end}}
 {{if eq .Action "new"}}
 <div hx-swap-oob="beforeend:#messages">
     {{end}}
-    <div class="flex items-start group" id="{{.ID}}" {{if eq .Action "edit" }}hx-swap-oob="true" {{end}}>
+    <div class="flex items-start group" id="m{{.ID}}" {{if eq .Action "edit" }}hx-swap-oob="true" {{end}}>
         <div class="mr-4 flex-shrink-0">
             <div class="w-10 h-10 rounded-full flex items-center justify-center user-color"
                 style="--user-color-value: #{{.AuthorUserColor}}">
@@ -22,9 +25,10 @@
                 <div class="flex items-center ml-2 flex-shrink-0">
                     <button 
                         class="text-stone-400 hover:text-stone-200 opacity-0 group-hover:opacity-100"
-                        hx-get="/messages/{{.ID}}/edit"
-                        hx-target="#{{.ID}}"
+                        hx-get="/messages/edit/{{.ID}}"
+                        hx-target="#m{{.ID}}"
                         hx-swap="outerHTML"
+                        hx-trigger="click"
                         >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -39,6 +43,9 @@
         </div>
     </div>
     {{if eq .Action "new"}}
+</div>
+{{end}}
+{{if eq .Action "edit"}}
 </div>
 {{end}}
 {{end}}

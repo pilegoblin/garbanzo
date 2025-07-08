@@ -104,9 +104,12 @@ SELECT
   u.username as author_username,
   u.avatar_url as author_avatar_url,
   u.user_color as author_user_color,
-  u.id as author_id
+  u.id as author_id,
+  b.pod_id as pod_id,
+  b.name as bean_name
 FROM new_message m
 JOIN users u ON m.author_id = u.id
+JOIN beans b ON m.bean_id = b.id
 `
 
 type CreateMessageParams struct {
@@ -127,6 +130,8 @@ type CreateMessageRow struct {
 	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
 	AuthorUserColor string      `json:"author_user_color"`
 	AuthorID_2      int64       `json:"author_id_2"`
+	PodID           int64       `json:"pod_id"`
+	BeanName        string      `json:"bean_name"`
 }
 
 // Message Queries
@@ -149,6 +154,8 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (C
 		&i.AuthorAvatarUrl,
 		&i.AuthorUserColor,
 		&i.AuthorID_2,
+		&i.PodID,
+		&i.BeanName,
 	)
 	return i, err
 }
@@ -663,12 +670,30 @@ func (q *Queries) UpdateBean(ctx context.Context, arg UpdateBeanParams) (Bean, e
 }
 
 const updateMessage = `-- name: UpdateMessage :one
-UPDATE messages
-SET
-  content = $2,
-  updated_at = now()
-WHERE id = $1
-RETURNING id, bean_id, author_id, content, created_at, updated_at
+WITH updated_message AS (
+  UPDATE messages
+  SET
+    content = $2,
+    updated_at = now()
+  WHERE messages.id = $1
+  RETURNING id, bean_id, author_id, content, created_at, updated_at
+)
+SELECT
+  um.id,
+  um.bean_id,
+  um.author_id,
+  um.content,
+  um.created_at,
+  um.updated_at,
+  b.pod_id,
+  b.name as bean_name,
+  u.username as author_username,
+  u.avatar_url as author_avatar_url,
+  u.user_color as author_user_color,
+  u.id as author_id
+FROM updated_message um
+JOIN beans b on um.bean_id = b.id
+JOIN users u ON um.author_id = u.id
 `
 
 type UpdateMessageParams struct {
@@ -676,9 +701,24 @@ type UpdateMessageParams struct {
 	Content string `json:"content"`
 }
 
-func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error) {
+type UpdateMessageRow struct {
+	ID              string      `json:"id"`
+	BeanID          int64       `json:"bean_id"`
+	AuthorID        int64       `json:"author_id"`
+	Content         string      `json:"content"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       *time.Time  `json:"updated_at"`
+	PodID           int64       `json:"pod_id"`
+	BeanName        string      `json:"bean_name"`
+	AuthorUsername  string      `json:"author_username"`
+	AuthorAvatarUrl pgtype.Text `json:"author_avatar_url"`
+	AuthorUserColor string      `json:"author_user_color"`
+	AuthorID_2      int64       `json:"author_id_2"`
+}
+
+func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (UpdateMessageRow, error) {
 	row := q.db.QueryRow(ctx, updateMessage, arg.ID, arg.Content)
-	var i Message
+	var i UpdateMessageRow
 	err := row.Scan(
 		&i.ID,
 		&i.BeanID,
@@ -686,6 +726,12 @@ func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (M
 		&i.Content,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PodID,
+		&i.BeanName,
+		&i.AuthorUsername,
+		&i.AuthorAvatarUrl,
+		&i.AuthorUserColor,
+		&i.AuthorID_2,
 	)
 	return i, err
 }

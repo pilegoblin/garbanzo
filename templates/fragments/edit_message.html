@@ -1,0 +1,24 @@
+{{define "edit_message"}}
+
+<div hx-swap-oob="true" id="m{{.ID}}">
+
+    <div class="flex items-start group" id="m{{.ID}}">
+        <div class="mr-4 flex-shrink-0">
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="flex items-baseline">
+            </div>
+            <div class="mt-1 text-stone-200 flex items-start justify-between">
+                <div class="flex-1 min-w-0 break-words">
+                    <form hx-post="/messages/edit/{{.ID}}" hx-trigger="submit">
+                        <input type="text" class="w-full bg-stone-700 text-stone-200 rounded-md p-2"
+                            value="{{.Content}}" name="content">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{end}}
+{{template "edit_message" .}}
